@@ -6,8 +6,9 @@ export type Locale = (typeof LOCALES)[number];
 
 export const LOCALE_COOKIE = "locale";
 
+// Arabic unless NEXT_PUBLIC_DEFAULT_LOCALE=en.
 export const DEFAULT_LOCALE: Locale =
-  process.env.NEXT_PUBLIC_DEFAULT_LOCALE === "ar" ? "ar" : "en";
+  process.env.NEXT_PUBLIC_DEFAULT_LOCALE === "en" ? "en" : "ar";
 
 export const isLocale = (value: unknown): value is Locale =>
   LOCALES.includes(value as Locale);
