@@ -2,6 +2,7 @@ import { cache } from "react";
 
 import { eq } from "drizzle-orm";
 
+import { features } from "@/config";
 import { getAuth } from "@/lib/auth";
 
 import db from "./drizzle";
@@ -21,6 +22,11 @@ export const getCourses = cache(async () => {
 
   return data;
 });
+
+// Draft lessons are hidden unless features.showDrafts is on.
+const visibleLessons = features.showDrafts
+  ? undefined
+  : eq(lessons.reviewStatus, "reviewed");
 
 export const getUserProgress = cache(async () => {
   const { userId } = await getAuth();
@@ -48,6 +54,7 @@ export const getUnits = cache(async () => {
     orderBy: (units, { asc }) => [asc(units.order)],
     with: {
       lessons: {
+        where: visibleLessons,
         orderBy: (lessons, { asc }) => [asc(lessons.order)],
         with: {
           challenges: {
@@ -93,6 +100,7 @@ export const getCourseById = cache(async (courseId: number) => {
         orderBy: (units, { asc }) => [asc(units.order)],
         with: {
           lessons: {
+            where: visibleLessons,
             orderBy: (lessons, { asc }) => [asc(lessons.order)],
           },
         },
@@ -114,6 +122,7 @@ export const getCourseProgress = cache(async () => {
     where: eq(units.courseId, userProgress.activeCourseId),
     with: {
       lessons: {
+        where: visibleLessons,
         orderBy: (lessons, { asc }) => [asc(lessons.order)],
         with: {
           unit: true,
@@ -164,6 +173,7 @@ export const getLesson = cache(async (id?: number) => {
         orderBy: (challenges, { asc }) => [asc(challenges.order)],
         with: {
           challengeOptions: true,
+          sourceText: true,
           challengeProgress: {
             where: eq(challengeProgress.userId, userId),
           },
@@ -173,6 +183,7 @@ export const getLesson = cache(async (id?: number) => {
   });
 
   if (!data || !data.challenges) return null;
+  if (data.reviewStatus !== "reviewed" && !features.showDrafts) return null;
 
   const normalizedChallenges = data.challenges.map((challenge) => {
     const completed =

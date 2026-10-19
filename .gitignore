@@ -42,3 +42,6 @@ next-env.d.ts
 
 # clerk configuration (can include secrets)
 /.clerk/
+
+# imported content cache (copyrighted translations/audio; do not commit)
+/content/cache/

@@ -25,7 +25,12 @@ export const List = ({ courses, activeCourseId }: ListProps) => {
     if (id === activeCourseId) return router.push("/learn");
 
     startTransition(() => {
-      upsertUserProgress(id).catch(() => toast.error("Something went wrong."));
+      upsertUserProgress(id).catch((error) => {
+        // The action ends with redirect("/learn"), which surfaces here as a
+        // rejected promise; that's success, not an error.
+        if (String(error?.digest ?? "").startsWith("NEXT_REDIRECT")) return;
+        toast.error("Something went wrong.");
+      });
     });
   };
 

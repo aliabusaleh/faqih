@@ -12,7 +12,8 @@
     "format:fix": "prettier --write --ignore-path .gitignore .",
     "db:studio": "drizzle-kit studio",
     "db:push": "drizzle-kit push",
-    "db:prod": "tsx ./scripts/prod.ts"
+    "db:prod": "tsx ./scripts/prod.ts",
+    "content:import": "tsx ./scripts/import-content.ts"
   },
   "dependencies": {
     "@clerk/nextjs": "^7.2.8",

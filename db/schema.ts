@@ -11,10 +11,21 @@ import {
 
 import { MAX_HEARTS } from "@/constants";
 
+export const tracksEnum = pgEnum("track", [
+  "quran",
+  "hadith",
+  "sirah",
+  "adhkar",
+  "arabic",
+  "fiqh",
+]);
+
 export const courses = pgTable("courses", {
   id: serial("id").primaryKey(),
   title: text("title").notNull(),
   imageSrc: text("image_src").notNull(),
+  slug: text("slug").unique(), // e.g. "quran-al-fatiha"; set by the content importer
+  track: tracksEnum("track"),
 });
 
 export const coursesRelations = relations(courses, ({ many }) => ({
@@ -42,9 +53,13 @@ export const unitsRelations = relations(units, ({ many, one }) => ({
   lessons: many(lessons),
 }));
 
+// Lessons stay "draft" until a qualified reviewer approves them.
+export const reviewStatusEnum = pgEnum("review_status", ["draft", "reviewed"]);
+
 export const lessons = pgTable("lessons", {
   id: serial("id").primaryKey(),
   title: text("title").notNull(),
+  reviewStatus: reviewStatusEnum("review_status").notNull().default("draft"),
   unitId: integer("unit_id")
     .references(() => units.id, {
       onDelete: "cascade",
@@ -72,6 +87,10 @@ export const challenges = pgTable("challenges", {
     .notNull(),
   type: challengesEnum("type").notNull(),
   question: text("question").notNull(),
+  prompt: text("prompt"), // overrides the default title shown above the question
+  sourceTextId: integer("source_text_id").references(() => sourceTexts.id, {
+    onDelete: "set null",
+  }),
   order: integer("order").notNull(),
 });
 
@@ -82,6 +101,36 @@ export const challengesRelations = relations(challenges, ({ one, many }) => ({
   }),
   challengeOptions: many(challengeOptions),
   challengeProgress: many(challengeProgress),
+  sourceText: one(sourceTexts, {
+    fields: [challenges.sourceTextId],
+    references: [sourceTexts.id],
+  }),
+}));
+
+export const sourceKindEnum = pgEnum("source_kind", [
+  "ayah",
+  "hadith",
+  "dhikr",
+]);
+
+// Imported primary texts. Every challenge built from one links back here, so
+// the app can always show where its content comes from.
+export const sourceTexts = pgTable("source_texts", {
+  id: serial("id").primaryKey(),
+  key: text("key").notNull().unique(), // "quran:1:1", "nawawi:1", "hisn:77"
+  kind: sourceKindEnum("kind").notNull(),
+  arabic: text("arabic").notNull(),
+  translation: text("translation"),
+  translationBy: text("translation_by"), // e.g. "Sahih International"
+  citation: text("citation").notNull(), // e.g. "Quran 1:2", "an-Nawawi's Forty Hadith #1"
+  hadithRef: text("hadith_ref"), // takhrij, e.g. "Bukhari & Muslim"; null = needs a reviewer
+  sourceUrl: text("source_url").notNull(),
+  audioSrc: text("audio_src"),
+  repeat: integer("repeat"), // dhikr repetitions
+});
+
+export const sourceTextsRelations = relations(sourceTexts, ({ many }) => ({
+  challenges: many(challenges),
 }));
 
 export const challengeOptions = pgTable("challenge_options", {

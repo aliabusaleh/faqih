@@ -11,7 +11,13 @@ import { toast } from "sonner";
 import { upsertChallengeProgress } from "@/actions/challenge-progress";
 import { reduceHearts } from "@/actions/user-progress";
 import { MAX_HEARTS } from "@/constants";
-import { challengeOptions, challenges, userSubscription } from "@/db/schema";
+import {
+  challengeOptions,
+  challenges,
+  lessons,
+  sourceTexts,
+  userSubscription,
+} from "@/db/schema";
 import { useHeartsModal } from "@/store/use-hearts-modal";
 import { usePracticeModal } from "@/store/use-practice-modal";
 
@@ -20,14 +26,17 @@ import { Footer } from "./footer";
 import { Header } from "./header";
 import { QuestionBubble } from "./question-bubble";
 import { ResultCard } from "./result-card";
+import { SourceNote } from "./source-note";
 
 type QuizProps = {
   initialPercentage: number;
   initialHearts: number;
   initialLessonId: number;
+  reviewStatus: (typeof lessons.$inferSelect)["reviewStatus"];
   initialLessonChallenges: (typeof challenges.$inferSelect & {
     completed: boolean;
     challengeOptions: (typeof challengeOptions.$inferSelect)[];
+    sourceText: typeof sourceTexts.$inferSelect | null;
   })[];
   userSubscription:
     | (typeof userSubscription.$inferSelect & {
@@ -40,6 +49,7 @@ export const Quiz = ({
   initialPercentage,
   initialHearts,
   initialLessonId,
+  reviewStatus,
   initialLessonChallenges,
   userSubscription,
 }: QuizProps) => {
@@ -204,9 +214,10 @@ export const Quiz = ({
   }
 
   const title =
-    challenge.type === "ASSIST"
+    challenge.prompt ??
+    (challenge.type === "ASSIST"
       ? "Select the correct meaning"
-      : challenge.question;
+      : challenge.question);
 
   return (
     <>
@@ -237,6 +248,11 @@ export const Quiz = ({
                 selectedOption={selectedOption}
                 disabled={pending}
                 type={challenge.type}
+              />
+
+              <SourceNote
+                source={challenge.sourceText}
+                isDraft={reviewStatus !== "reviewed"}
               />
             </div>
           </div>

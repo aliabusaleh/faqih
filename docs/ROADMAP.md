@@ -44,7 +44,22 @@ Estimates assume one full-time developer. Part-time (evenings) is about
   running locally.
 - ESLint fixed for ESLint 10 / eslint-config-next 16.
 
-### M1 — Content model and pipeline (2 weeks)
+### M1 — Content model and pipeline (2 weeks) 🚧 _in progress_
+
+**Done (branch `m1-content`):**
+
+- Schema: `courses.slug`/`track`, `lessons.reviewStatus` (all imports start as
+  `draft`), a `source_texts` table (Arabic, translation, citation, takhrij,
+  link, audio), and `challenges.sourceTextId`/`prompt`.
+- `npm run content:import` pulls from alquran.cloud, fawazahmed0/hadith-api and
+  the hisnmuslim.com API and builds three draft courses: Al-Fatiha, an-Nawawi
+  1–10, and morning and evening adhkar.
+- Every challenge shows its source and links to it, plus a draft warning. Drafts are hidden in
+  production unless `NEXT_PUBLIC_SHOW_DRAFTS=true`.
+- Hisn al-Muslim takhrij is still to do: the API has none, so reviewers add
+  references in `content/references/hisn-al-muslim.json`.
+
+**Original scope:**
 
 - Generalise the schema:
   - `courses.slug` and `courses.track`

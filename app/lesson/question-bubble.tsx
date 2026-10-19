@@ -1,5 +1,7 @@
 import Image from "next/image";
 
+import { cn, isArabic } from "@/lib/utils";
+
 type QuestionBubbleProps = {
   question: string;
 };
@@ -24,7 +26,10 @@ export const QuestionBubble = ({ question }: QuestionBubbleProps) => {
 
       <div
         dir="auto"
-        className="relative rounded-xl border-2 px-4 py-2 text-sm lg:text-base"
+        className={cn(
+          "relative rounded-xl border-2 px-4 py-2 text-sm lg:text-base",
+          isArabic(question) && "font-arabic text-lg leading-loose lg:text-2xl"
+        )}
       >
         {question}
 

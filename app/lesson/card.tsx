@@ -4,7 +4,7 @@ import Image from "next/image";
 import { useAudio, useKey } from "react-use";
 
 import { challenges } from "@/db/schema";
-import { cn } from "@/lib/utils";
+import { cn, isArabic } from "@/lib/utils";
 
 type CardProps = {
   id: number;
@@ -76,6 +76,7 @@ export const Card = ({
           dir="auto"
           className={cn(
             "text-sm text-neutral-600 lg:text-base",
+            isArabic(text) && "font-arabic text-lg leading-loose lg:text-xl",
             selected && "text-sky-500",
             selected && status === "correct" && "text-green-500",
             selected && status === "wrong" && "text-rose-500"

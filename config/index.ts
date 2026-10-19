@@ -37,4 +37,9 @@ export const features = {
   localAuth:
     process.env.NEXT_PUBLIC_DEV_AUTH === "local" &&
     process.env.NODE_ENV !== "production",
+  // Unreviewed (draft) lessons: visible in development, hidden in production
+  // unless NEXT_PUBLIC_SHOW_DRAFTS=true.
+  showDrafts:
+    process.env.NODE_ENV !== "production" ||
+    process.env.NEXT_PUBLIC_SHOW_DRAFTS === "true",
 } as const;
