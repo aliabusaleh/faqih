@@ -7,6 +7,7 @@ import { toast } from "sonner";
 
 import { refillHearts } from "@/actions/user-progress";
 import { createStripeUrl } from "@/actions/user-subscription";
+import { useMessages } from "@/components/locale-provider";
 import { Button } from "@/components/ui/button";
 import { features } from "@/config";
 import { MAX_HEARTS, POINTS_TO_REFILL } from "@/constants";
@@ -23,12 +24,13 @@ export const Items = ({
   hasActiveSubscription,
 }: ItemsProps) => {
   const [pending, startTransition] = useTransition();
+  const t = useMessages();
 
   const onRefillHearts = () => {
     if (pending || hearts === MAX_HEARTS || points < POINTS_TO_REFILL) return;
 
     startTransition(() => {
-      refillHearts().catch(() => toast.error("Something went wrong."));
+      refillHearts().catch(() => toast.error(t.error));
     });
   };
 
@@ -39,7 +41,7 @@ export const Items = ({
         .then((response) => {
           if (response.data) window.location.href = response.data;
         })
-        .catch(() => toast.error("Something went wrong."));
+        .catch(() => toast.error(t.error));
     });
   };
 
@@ -50,7 +52,7 @@ export const Items = ({
 
         <div className="flex-1">
           <p className="text-base font-bold text-neutral-700 lg:text-xl">
-            Refill hearts
+            {t.shop.refillHearts}
           </p>
         </div>
 
@@ -64,7 +66,7 @@ export const Items = ({
           }
         >
           {hearts === MAX_HEARTS ? (
-            "full"
+            t.shop.full
           ) : (
             <div className="flex items-center">
               <Image src="/points.svg" alt="Points" height={20} width={20} />
@@ -81,7 +83,7 @@ export const Items = ({
 
           <div className="flex-1">
             <p className="text-base font-bold text-neutral-700 lg:text-xl">
-              Unlimited hearts
+              {t.shop.unlimitedHearts}
             </p>
           </div>
 
@@ -90,7 +92,7 @@ export const Items = ({
             disabled={pending}
             aria-disabled={pending}
           >
-            {hasActiveSubscription ? "settings" : "upgrade"}
+            {hasActiveSubscription ? t.shop.settings : t.shop.upgrade}
           </Button>
         </div>
       )}

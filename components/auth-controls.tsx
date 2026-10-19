@@ -13,24 +13,32 @@ import { Loader } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
+import { LanguageSwitcher } from "@/components/language-switcher";
+import { useMessages } from "@/components/locale-provider";
 import { Button } from "@/components/ui/button";
 import { features, links } from "@/config";
 
 // Clerk components only render when Clerk is in use; local dev login
 // (NEXT_PUBLIC_DEV_AUTH=local) gets simple stand-ins with no Clerk provider.
 
-const LocalUserBadge = () => (
-  <div className="flex items-center gap-x-2" title="Local dev login">
-    <Image
-      src="/mascot.svg"
-      alt="Dev User"
-      height={32}
-      width={32}
-      className="rounded-full border"
-    />
-    <span className="text-sm font-semibold text-neutral-600">Dev User</span>
-  </div>
-);
+const LocalUserBadge = () => {
+  const t = useMessages();
+
+  return (
+    <div className="flex items-center gap-x-2" title="Local dev login">
+      <Image
+        src="/mascot.svg"
+        alt="Dev User"
+        height={32}
+        width={32}
+        className="rounded-full border"
+      />
+      <span className="text-sm font-semibold text-neutral-600">
+        {t.auth.devUser}
+      </span>
+    </div>
+  );
+};
 
 const SourceCodeLink = ({ className }: { className?: string }) => (
   <Link
@@ -65,6 +73,7 @@ export const UserMenu = () => {
 
 const ClerkHeaderAuth = ({ showUserButton }: { showUserButton: boolean }) => {
   const { isSignedIn } = useAuth();
+  const t = useMessages();
 
   return (
     <>
@@ -82,7 +91,7 @@ const ClerkHeaderAuth = ({ showUserButton }: { showUserButton: boolean }) => {
         <Show when="signed-out">
           <SignInButton mode="modal">
             <Button size="lg" variant="ghost">
-              Login
+              {t.auth.login}
             </Button>
           </SignInButton>
         </Show>
@@ -97,19 +106,27 @@ export const HeaderAuth = ({ showUserButton = true }) => {
   if (features.localAuth)
     return (
       <>
+        <LanguageSwitcher />
         <LocalUserBadge />
         <SourceCodeLink className="pt-1.5" />
       </>
     );
 
-  return <ClerkHeaderAuth showUserButton={showUserButton} />;
+  return (
+    <>
+      <LanguageSwitcher />
+      <ClerkHeaderAuth showUserButton={showUserButton} />
+    </>
+  );
 };
 
 export const GetStartedButtons = () => {
+  const t = useMessages();
+
   if (features.localAuth)
     return (
       <Button size="lg" variant="secondary" className="w-full" asChild>
-        <Link href="/learn">Continue Learning</Link>
+        <Link href="/learn">{t.auth.continueLearning}</Link>
       </Button>
     );
 
@@ -122,20 +139,20 @@ export const GetStartedButtons = () => {
       <ClerkLoaded>
         <Show when="signed-in">
           <Button size="lg" variant="secondary" className="w-full" asChild>
-            <Link href="/learn">Continue Learning</Link>
+            <Link href="/learn">{t.auth.continueLearning}</Link>
           </Button>
         </Show>
 
         <Show when="signed-out">
           <SignUpButton mode="modal">
             <Button size="lg" variant="secondary" className="w-full">
-              Get Started
+              {t.auth.getStarted}
             </Button>
           </SignUpButton>
 
           <SignInButton mode="modal">
             <Button size="lg" variant="primaryOutline" className="w-full">
-              I already have an account
+              {t.auth.haveAccount}
             </Button>
           </SignInButton>
         </Show>

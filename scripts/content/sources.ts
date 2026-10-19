@@ -12,7 +12,9 @@ export type SourceText = {
   translation: string | null;
   translationBy: string | null;
   citation: string;
+  citationAr: string;
   hadithRef: string | null;
+  hadithRefAr: string | null;
   sourceUrl: string;
   audioSrc: string | null;
   repeat: number | null;
@@ -45,9 +47,12 @@ const fetchJson = async <T>(
 
 const clean = (s: string) => s.replace(/^﻿/, "").trim();
 
+const arNum = (n: number) => n.toLocaleString("ar-EG");
+
 /* ---------- Quran: api.alquran.cloud (Uthmani text from Tanzil) ---------- */
 
 type AlQuranEdition = {
+  name: string; // Arabic surah name, e.g. "سُورَةُ ٱلْفَاتِحَةِ"
   edition: { identifier: string; englishName: string };
   ayahs: { numberInSurah: number; text: string; audio?: string }[];
 };
@@ -79,7 +84,9 @@ export const fetchSurah = async (
     translation: clean(english.ayahs[i].text),
     translationBy: "Sahih International",
     citation: `Quran ${surah}:${ayah.numberInSurah}`,
+    citationAr: `${arabic.name}: ${arNum(ayah.numberInSurah)}`,
     hadithRef: null,
+    hadithRefAr: null,
     sourceUrl: `https://quran.com/${surah}/${ayah.numberInSurah}`,
     audioSrc: audio.ayahs[i].audio ?? null,
     repeat: null,
@@ -88,6 +95,14 @@ export const fetchSurah = async (
 };
 
 /* ---------- Hadith: fawazahmed0/hadith-api (via jsDelivr) ---------- */
+
+// The English takhrij values in this edition, with their Arabic names. A
+// takhrij not listed here gets no Arabic reference (and so no question).
+const TAKHRIJ_AR: Record<string, string> = {
+  "Bukhari & Muslim": "رواه البخاري ومسلم",
+  "Al-Bukhari": "رواه البخاري",
+  Muslim: "رواه مسلم",
+};
 
 type HadithEdition = {
   hadiths: { hadithnumber: number; text: string }[];
@@ -122,7 +137,9 @@ export const fetchNawawi = async (refresh: boolean): Promise<SourceText[]> => {
         translation: clean(h.text),
         translationBy: "fawazahmed0/hadith-api (English)",
         citation: `an-Nawawi's Forty Hadith #${h.hadithnumber}`,
+        citationAr: `الأربعون النووية، الحديث ${arNum(h.hadithnumber)}`,
         hadithRef: takhrij,
+        hadithRefAr: (takhrij && TAKHRIJ_AR[takhrij]) ?? null,
         sourceUrl: `https://sunnah.com/nawawi40:${h.hadithnumber}`,
         audioSrc: null,
         repeat: null,
@@ -143,7 +160,8 @@ type HisnEntry = {
 };
 
 // The API gives no hadith reference per dhikr. References confirmed by a
-// reviewer (from the book's footnotes) go in this file: { "<ID>": "Muslim 2723" }.
+// reviewer (from the book's footnotes) go in this file, keyed by dhikr ID:
+//   { "77": { "en": "Muslim 2723", "ar": "رواه مسلم ٢٧٢٣" } }
 const HISN_REFERENCES = path.join(
   process.cwd(),
   "content",
@@ -168,7 +186,9 @@ export const fetchHisnChapter = async (
     ),
   ]);
 
-  const references: Record<string, string> = existsSync(HISN_REFERENCES)
+  const references: Record<string, { en?: string; ar?: string }> = existsSync(
+    HISN_REFERENCES
+  )
     ? JSON.parse(readFileSync(HISN_REFERENCES, "utf8"))
     : {};
 
@@ -187,8 +207,10 @@ export const fetchHisnChapter = async (
         : null,
       translationBy: "hisnmuslim.com (English)",
       citation: `Hisn al-Muslim #${entry.ID}`,
-      hadithRef: references[String(entry.ID)] ?? null,
-      sourceUrl: `https://www.hisnmuslim.com/i/en/${chapter}`,
+      citationAr: `حصن المسلم، رقم ${arNum(entry.ID)}`,
+      hadithRef: references[String(entry.ID)]?.en ?? null,
+      hadithRefAr: references[String(entry.ID)]?.ar ?? null,
+      sourceUrl: `https://www.hisnmuslim.com/i/ar/${chapter}`,
       audioSrc: entry.AUDIO?.replace(/^http:/, "https:") || null,
       repeat: entry.REPEAT || 1,
       number: i + 1,

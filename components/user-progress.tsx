@@ -39,7 +39,7 @@ export const UserProgress = ({
             height={28}
             width={28}
             alt="Points"
-            className="mr-2"
+            className="me-2"
           />
           {points}
         </Button>
@@ -52,7 +52,7 @@ export const UserProgress = ({
             height={22}
             width={22}
             alt="Hearts"
-            className="mr-2"
+            className="me-2"
           />
           {hasActiveSubscription ? (
             <InfinityIcon className="stroke-3 h-4 w-4" />

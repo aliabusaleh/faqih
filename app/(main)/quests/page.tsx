@@ -8,6 +8,8 @@ import { Progress } from "@/components/ui/progress";
 import { UserProgress } from "@/components/user-progress";
 import { QUESTS } from "@/constants";
 import { getUserProgress, getUserSubscription } from "@/db/queries";
+import { formatNumber, messages } from "@/lib/i18n";
+import { getLocale } from "@/lib/locale";
 
 const QuestsPage = async () => {
   const userProgressData = getUserProgress();
@@ -21,6 +23,8 @@ const QuestsPage = async () => {
   if (!userProgress || !userProgress.activeCourse) redirect("/courses");
 
   const isPro = !!userSubscription?.isActive;
+  const locale = await getLocale();
+  const t = messages[locale];
 
   return (
     <div className="flex flex-row-reverse gap-[48px] px-6">
@@ -39,10 +43,10 @@ const QuestsPage = async () => {
           <Image src="/quests.svg" alt="Quests" height={90} width={90} />
 
           <h1 className="my-6 text-center text-2xl font-bold text-neutral-800">
-            Quests
+            {t.quests.title}
           </h1>
           <p className="mb-6 text-center text-lg text-muted-foreground">
-            Complete quests by earning points.
+            {t.quests.description}
           </p>
 
           <ul className="w-full">
@@ -63,7 +67,7 @@ const QuestsPage = async () => {
 
                   <div className="flex w-full flex-col gap-y-2">
                     <p className="text-xl font-bold text-neutral-700">
-                      {quest.title}
+                      {t.quests.earn(formatNumber(locale, quest.value))}
                     </p>
 
                     <Progress value={progress} className="h-3" />

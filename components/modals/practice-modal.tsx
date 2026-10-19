@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 
 import Image from "next/image";
 
+import { useMessages } from "@/components/locale-provider";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -17,6 +18,7 @@ import { usePracticeModal } from "@/store/use-practice-modal";
 
 export const PracticeModal = () => {
   const [isClient, setIsClient] = useState(false);
+  const t = useMessages();
   const { isOpen, close } = usePracticeModal();
 
   useEffect(() => setIsClient(true), []);
@@ -32,12 +34,11 @@ export const PracticeModal = () => {
           </div>
 
           <DialogTitle className="text-center text-2xl font-bold">
-            Practice lesson
+            {t.modals.practiceTitle}
           </DialogTitle>
 
           <DialogDescription className="text-center text-base">
-            Use practice lessons to regain hearts and points. You cannot loose
-            hearts or points in practice lessons.
+            {t.modals.practiceBody}
           </DialogDescription>
         </DialogHeader>
 
@@ -49,7 +50,7 @@ export const PracticeModal = () => {
               size="lg"
               onClick={close}
             >
-              I understand
+              {t.modals.understand}
             </Button>
           </div>
         </DialogFooter>

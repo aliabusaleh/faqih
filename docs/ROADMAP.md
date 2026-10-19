@@ -56,6 +56,9 @@ Estimates assume one full-time developer. Part-time (evenings) is about
   1–10, and morning and evening adhkar.
 - Every challenge shows its source and links to it, plus a draft warning. Drafts are hidden in
   production unless `NEXT_PUBLIC_SHOW_DRAFTS=true`.
+- **One language at a time:** a switch between English and العربية (full RTL UI).
+  Each course is built separately for each language, and every question and
+  its options are in that one language, so there are no translation questions.
 - Hisn al-Muslim takhrij is still to do: the API has none, so reviewers add
   references in `content/references/hisn-al-muslim.json`.
 

@@ -4,6 +4,7 @@ import { eq } from "drizzle-orm";
 
 import { features } from "@/config";
 import { getAuth } from "@/lib/auth";
+import { getLocale } from "@/lib/locale";
 
 import db from "./drizzle";
 import {
@@ -17,8 +18,11 @@ import {
 
 const DAY_IN_MS = 86_400_000;
 
+// Only courses in the visitor's language.
 export const getCourses = cache(async () => {
-  const data = await db.query.courses.findMany();
+  const data = await db.query.courses.findMany({
+    where: eq(courses.language, await getLocale()),
+  });
 
   return data;
 });
@@ -39,6 +43,10 @@ export const getUserProgress = cache(async () => {
       activeCourse: true,
     },
   });
+
+  // A course in the other language isn't active while this language is shown.
+  if (data?.activeCourse && data.activeCourse.language !== (await getLocale()))
+    return { ...data, activeCourse: null, activeCourseId: null };
 
   return data;
 });

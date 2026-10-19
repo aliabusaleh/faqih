@@ -38,7 +38,9 @@ const upsertSourceTexts = async (texts: SourceText[]) => {
       translation: t.translation,
       translationBy: t.translationBy,
       citation: t.citation,
+      citationAr: t.citationAr,
       hadithRef: t.hadithRef,
+      hadithRefAr: t.hadithRefAr,
       sourceUrl: t.sourceUrl,
       audioSrc: t.audioSrc,
       repeat: t.repeat,
@@ -65,6 +67,7 @@ const insertCourse = async (
       imageSrc: course.imageSrc,
       slug: course.slug,
       track: course.track,
+      language: course.language,
     })
     .returning();
 
@@ -150,12 +153,14 @@ const main = async () => {
   // Cascades to units, lessons, challenges, options and progress.
   await db.delete(schema.courses);
 
-  for (const course of [
-    buildFatiha(fatiha),
-    buildNawawi(nawawi, 10),
-    buildMorningEvening(morningEvening),
-  ])
-    await insertCourse(course, sourceIds);
+  // One course per language; nothing mixes Arabic and English.
+  for (const lang of ["ar", "en"] as const)
+    for (const course of [
+      buildFatiha(fatiha, lang),
+      buildNawawi(nawawi, 10, lang),
+      buildMorningEvening(morningEvening, lang),
+    ])
+      await insertCourse(course, sourceIds);
 
   console.log("Done. All lessons are drafts until reviewed.");
 };

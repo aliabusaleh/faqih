@@ -1,6 +1,7 @@
 import { CheckCircle, XCircle } from "lucide-react";
 import { useKey, useMedia } from "react-use";
 
+import { useMessages } from "@/components/locale-provider";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -18,6 +19,7 @@ export const Footer = ({
   lessonId,
 }: FooterProps) => {
   useKey("Enter", onCheck, {}, [onCheck]);
+  const t = useMessages();
   const isMobile = useMedia("(max-width: 1024px)");
 
   return (
@@ -31,15 +33,15 @@ export const Footer = ({
       <div className="mx-auto flex h-full max-w-[1140px] items-center justify-between px-6 lg:px-10">
         {status === "correct" && (
           <div className="flex items-center text-base font-bold text-green-500 lg:text-2xl">
-            <CheckCircle className="mr-4 h-6 w-6 lg:h-10 lg:w-10" />
-            Nicely done!
+            <CheckCircle className="me-4 h-6 w-6 lg:h-10 lg:w-10" />
+            {t.lesson.correct}
           </div>
         )}
 
         {status === "wrong" && (
           <div className="flex items-center text-base font-bold text-rose-500 lg:text-2xl">
-            <XCircle className="mr-4 h-6 w-6 lg:h-10 lg:w-10" />
-            Try again.
+            <XCircle className="me-4 h-6 w-6 lg:h-10 lg:w-10" />
+            {t.lesson.wrong}
           </div>
         )}
 
@@ -49,22 +51,22 @@ export const Footer = ({
             size={isMobile ? "sm" : "lg"}
             onClick={() => (window.location.href = `/lesson/${lessonId}`)}
           >
-            Practice again
+            {t.lesson.practiceAgain}
           </Button>
         )}
 
         <Button
           disabled={disabled}
           aria-disabled={disabled}
-          className="ml-auto"
+          className="ms-auto"
           onClick={onCheck}
           size={isMobile ? "sm" : "lg"}
           variant={status === "wrong" ? "danger" : "secondary"}
         >
-          {status === "none" && "Check"}
-          {status === "correct" && "Next"}
-          {status === "wrong" && "Retry"}
-          {status === "completed" && "Continue"}
+          {status === "none" && t.lesson.check}
+          {status === "correct" && t.lesson.next}
+          {status === "wrong" && t.lesson.retry}
+          {status === "completed" && t.lesson.continue}
         </Button>
       </div>
     </footer>

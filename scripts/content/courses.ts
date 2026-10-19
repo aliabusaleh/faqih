@@ -1,8 +1,15 @@
 import type { SourceText } from "./sources";
 
-// Builds courses from imported source texts. Adab rule: every wrong answer is
-// another *real* text (ayah, hadith, dhikr) or a real value from the data;
-// nothing is altered or invented.
+// Builds courses from imported source texts, one course per language.
+//
+// Rules:
+// - Monolingual: a course, its questions and its options are all Arabic or
+//   all English. There are no "translate this" questions.
+// - Adab: every wrong answer is another *real* text (ayah, hadith, dhikr) or
+//   a real value from the data; nothing is altered or invented. Long texts
+//   are shown as excerpts marked with "…".
+
+export type Language = "ar" | "en";
 
 export type OptionSpec = { text: string; correct: boolean };
 
@@ -22,6 +29,7 @@ export type UnitSpec = {
 
 export type CourseSpec = {
   slug: string;
+  language: Language;
   track: "quran" | "hadith" | "adhkar";
   title: string;
   imageSrc: string;
@@ -51,10 +59,10 @@ const shuffle = <T>(items: T[], seed: string) => {
   return out;
 };
 
-// Picks `count` distractors from `pool`, excluding the answer.
+// Picks `count` distinct distractors from `pool`, excluding the answer.
 const pick = <T>(pool: T[], exclude: T, count: number, seed: string) =>
   shuffle(
-    pool.filter((p) => p !== exclude),
+    [...new Set(pool)].filter((p) => p !== exclude),
     seed
   ).slice(0, count);
 
@@ -67,12 +75,11 @@ const options = (correct: string, wrong: string[], seed: string) =>
     `${seed}:options`
   );
 
-// Shortens long text on a word boundary. Shown with "…" so it is clearly an
-// excerpt of the source, not a rewording.
-const excerpt = (text: string, max: number) => {
-  if (text.length <= max) return text;
-  const cut = text.slice(0, max);
-  return `${cut.slice(0, cut.lastIndexOf(" "))} …`;
+const words = (text: string) => text.split(/\s+/).filter(Boolean);
+
+const excerpt = (text: string, maxWords: number) => {
+  const w = words(text);
+  return w.length <= maxWords ? text : `${w.slice(0, maxWords).join(" ")} …`;
 };
 
 const chunk = <T>(items: T[], size: number) =>
@@ -80,60 +87,112 @@ const chunk = <T>(items: T[], size: number) =>
     items.slice(i * size, i * size + size)
   );
 
+const num = (lang: Language, n: number) =>
+  lang === "ar" ? n.toLocaleString("ar-EG") : String(n);
+
+const range = (lang: Language, a: number, b: number) =>
+  `${num(lang, a)}–${num(lang, b)}`;
+
+// Hisn al-Muslim marks the dhikr with (( )) and notes with [ ]; drop the
+// markers in excerpts, keep the words.
+const stripMarkers = (text: string) =>
+  text
+    .replace(/<[^>]+>/g, " ")
+    .replace(/\(\(|\)\)/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+
 /* ---------- Quran: Al-Fatiha ---------- */
 
-export const buildFatiha = (ayat: SourceText[]): CourseSpec => {
-  const translations = ayat.map((a) => a.translation!);
-  const arabic = ayat.map((a) => a.arabic);
+export const buildFatiha = (ayat: SourceText[], lang: Language): CourseSpec => {
+  const ar = lang === "ar";
+  // English lessons work with the English meaning; Arabic with the Quran text.
+  const text = (a: SourceText) => (ar ? a.arabic : a.translation!);
+  const all = ayat.map(text);
 
-  const meaning = (ayah: SourceText): ChallengeSpec => ({
-    prompt: "What does this ayah mean?",
-    question: ayah.arabic,
-    sourceKey: ayah.key,
+  const next = (ayah: SourceText, following: SourceText): ChallengeSpec => ({
+    prompt: ar ? "ما الآية التالية؟" : "Which ayah comes next? (meaning)",
+    question: text(ayah),
+    sourceKey: following.key,
     options: options(
-      ayah.translation!,
-      pick(translations, ayah.translation!, 2, ayah.key),
-      ayah.key
+      text(following),
+      pick(
+        all.filter((t) => t !== text(ayah)),
+        text(following),
+        2,
+        `${following.key}:next:${lang}`
+      ),
+      `${following.key}:next:${lang}`
     ),
   });
 
-  const next = (ayah: SourceText, following: SourceText): ChallengeSpec => ({
-    prompt: "Which ayah comes next?",
-    question: ayah.arabic,
-    sourceKey: following.key,
+  // Split each ayah in half; wrong endings are the endings of other ayat.
+  const halves = ayat
+    .map((a) => {
+      const w = words(text(a));
+      const cut = Math.ceil(w.length / 2);
+      return {
+        ayah: a,
+        start: w.slice(0, cut).join(" "),
+        end: w.slice(cut).join(" "),
+      };
+    })
+    .filter((h) => h.end);
+
+  const complete = (h: (typeof halves)[number]): ChallengeSpec => ({
+    prompt: ar ? "أكمل الآية" : "Complete the ayah (meaning)",
+    question: `${h.start} …`,
+    sourceKey: h.ayah.key,
     options: options(
-      following.arabic,
+      h.end,
       pick(
-        arabic.filter((a) => a !== ayah.arabic),
-        following.arabic,
+        halves.map((x) => x.end),
+        h.end,
         2,
-        `${following.key}:next`
+        `${h.ayah.key}:end:${lang}`
       ),
-      `${following.key}:next`
+      `${h.ayah.key}:end:${lang}`
+    ),
+  });
+
+  const numbers = ayat.map((a) => num(lang, a.number));
+  const number = (a: SourceText): ChallengeSpec => ({
+    prompt: ar
+      ? "ما رقم هذه الآية في سورة الفاتحة؟"
+      : "Which ayah of Al-Fatiha is this?",
+    question: text(a),
+    sourceKey: a.key,
+    options: options(
+      num(lang, a.number),
+      pick(numbers, num(lang, a.number), 2, `${a.key}:num:${lang}`),
+      `${a.key}:num:${lang}`
     ),
   });
 
   return {
-    slug: "quran-al-fatiha",
+    slug: `quran-al-fatiha-${lang}`,
+    language: lang,
     track: "quran",
-    title: "Quran: Al-Fatiha",
+    title: ar ? "القرآن: سورة الفاتحة" : "Quran: Al-Fatiha",
     imageSrc: "/courses/quran.svg",
     units: [
       {
-        title: "Al-Fatiha",
-        description: "The Opening: its meaning and order (7 ayat)",
+        title: ar ? "سورة الفاتحة" : "Al-Fatiha",
+        description: ar
+          ? "ترتيب الآيات وإكمالها وأرقامها (٧ آيات)"
+          : "The Opening, in English meaning: order, completion and numbers",
         lessons: [
           {
-            title: "Meaning: ayat 1–4",
-            challenges: ayat.slice(0, 4).map(meaning),
-          },
-          {
-            title: "Meaning: ayat 5–7",
-            challenges: ayat.slice(4).map(meaning),
-          },
-          {
-            title: "What comes next?",
+            title: ar ? "ترتيب الآيات" : "What comes next?",
             challenges: ayat.slice(0, -1).map((a, i) => next(a, ayat[i + 1])),
+          },
+          {
+            title: ar ? "أكمل الآية" : "Complete the ayah",
+            challenges: halves.map(complete),
+          },
+          {
+            title: ar ? "أرقام الآيات" : "Ayah numbers",
+            challenges: ayat.map(number),
           },
         ],
       },
@@ -143,8 +202,8 @@ export const buildFatiha = (ayat: SourceText[]): CourseSpec => {
 
 /* ---------- Hadith: an-Nawawi's Forty ---------- */
 
-// The Prophet's words: the first quoted passage, else the text after "said:".
-const hadithSaying = (h: SourceText) => {
+// English: the Prophet's words are the first quoted passage.
+const englishSaying = (h: SourceText) => {
   const text = h.translation!.replace(/\s*\[[^\]]+\]\s*$/, "");
   const quoted = text.match(/"([^"]{25,})"/)?.[1];
   const saying =
@@ -152,55 +211,100 @@ const hadithSaying = (h: SourceText) => {
     text
       .split(/said:\s*/)
       .slice(1)
-      .join(" ") ??
-    text;
-  return excerpt(saying || text, 150);
+      .join(" ");
+  return excerpt(saying || text, 22);
 };
 
-export const buildNawawi = (all: SourceText[], count: number): CourseSpec => {
-  const hadiths = all.slice(0, count);
-  const sayings = all.map(hadithSaying);
-  const refs = [
-    ...new Set(all.map((h) => h.hadithRef).filter(Boolean)),
-  ] as string[];
+// Arabic: the words after "the Messenger of Allah / the Prophet … said:".
+// Search on text without diacritics, then cut the original at that point.
+const DIACRITICS = /[ً-ٰٟـ]/;
+const arabicSaying = (h: SourceText) => {
+  const original = stripMarkers(h.arabic);
+  let plain = "";
+  const map: number[] = [];
+  for (let i = 0; i < original.length; i++) {
+    if (DIACRITICS.test(original[i])) continue;
+    plain += original[i];
+    map.push(i);
+  }
 
-  const which = (h: SourceText): ChallengeSpec => {
-    const saying = hadithSaying(h);
-    return {
-      prompt: `Which of these is Hadith #${h.number}?`,
-      question: `an-Nawawi's Forty Hadith, #${h.number}`,
-      sourceKey: h.key,
-      options: options(saying, pick(sayings, saying, 2, h.key), h.key),
-    };
+  const attribution = plain.match(/(رسول الله|النبي)[^:]{0,80}:/);
+  const start =
+    attribution?.index !== undefined
+      ? map[attribution.index + attribution[0].length]
+      : (map[plain.indexOf(":") + 1] ?? 0);
+
+  // Drop the closing takhrij ("رواه …") if present.
+  const takhrij = plain.search(/\[?رواه/);
+  const end = takhrij > 0 ? map[takhrij] : original.length;
+
+  const saying = original
+    .slice(start, end > start ? end : undefined)
+    .replace(/^[\s"«]+|[\s"».]+$/g, "");
+  return excerpt(saying, 16);
+};
+
+export const buildNawawi = (
+  all: SourceText[],
+  count: number,
+  lang: Language
+): CourseSpec => {
+  const ar = lang === "ar";
+  const saying = ar ? arabicSaying : englishSaying;
+  const ref = (h: SourceText) => (ar ? h.hadithRefAr : h.hadithRef);
+
+  const hadiths = all.slice(0, count);
+  const sayings = all.map(saying);
+  const refs = all.map(ref).filter(Boolean) as string[];
+
+  const which = (h: SourceText): ChallengeSpec => ({
+    prompt: ar
+      ? `أيّ هذه هو الحديث رقم ${num(lang, h.number)}؟`
+      : `Which of these is Hadith #${h.number}?`,
+    question: ar
+      ? `الأربعون النووية — الحديث ${num(lang, h.number)}`
+      : `an-Nawawi's Forty Hadith, #${h.number}`,
+    sourceKey: h.key,
+    options: options(
+      saying(h),
+      pick(sayings, saying(h), 2, `${h.key}:${lang}`),
+      `${h.key}:${lang}`
+    ),
+  });
+
+  const recorded = (h: SourceText): ChallengeSpec[] => {
+    const r = ref(h);
+    if (!r) return [];
+    return [
+      {
+        prompt: ar ? "من أخرج هذا الحديث؟" : "Who recorded this hadith?",
+        question: saying(h),
+        sourceKey: h.key,
+        options: options(
+          r,
+          pick(refs, r, 2, `${h.key}:ref:${lang}`),
+          `${h.key}:ref:${lang}`
+        ),
+      },
+    ];
   };
 
-  const recorded = (h: SourceText): ChallengeSpec[] =>
-    h.hadithRef
-      ? [
-          {
-            prompt: "Who recorded this hadith?",
-            question: hadithSaying(h),
-            sourceKey: h.key,
-            options: options(
-              h.hadithRef,
-              pick(refs, h.hadithRef, 2, `${h.key}:ref`),
-              `${h.key}:ref`
-            ),
-          },
-        ]
-      : [];
-
   return {
-    slug: "hadith-nawawi-40",
+    slug: `hadith-nawawi-40-${lang}`,
+    language: lang,
     track: "hadith",
-    title: "Hadith: an-Nawawi's Forty",
+    title: ar ? "الحديث: الأربعون النووية" : "Hadith: an-Nawawi's Forty",
     imageSrc: "/courses/hadith.svg",
     units: [
       {
-        title: `Hadith 1–${count}`,
-        description: "The foundations: intention, Islam, iman, ihsan…",
+        title: ar
+          ? `الأحاديث ${range(lang, 1, count)}`
+          : `Hadith ${range(lang, 1, count)}`,
+        description: ar
+          ? "أسس الدين: النية والإسلام والإيمان والإحسان…"
+          : "The foundations: intention, Islam, iman, ihsan…",
         lessons: chunk(hadiths, 2).map((pair) => ({
-          title: `Hadith ${pair[0].number}–${pair[pair.length - 1].number}`,
+          title: `${ar ? "الحديث" : "Hadith"} ${range(lang, pair[0].number, pair[pair.length - 1].number)}`,
           challenges: pair.flatMap((h) => [which(h), ...recorded(h)]),
         })),
       },
@@ -210,48 +314,80 @@ export const buildNawawi = (all: SourceText[], count: number): CourseSpec => {
 
 /* ---------- Adhkar: Hisn al-Muslim, morning & evening ---------- */
 
-export const buildMorningEvening = (adhkar: SourceText[]): CourseSpec => {
-  const withMeaning = adhkar.filter((d) => d.translation);
-  const meanings = withMeaning.map((d) => excerpt(d.translation!, 160));
-  const counts = [...new Set(adhkar.map((d) => d.repeat ?? 1))];
+const timesLabel = (lang: Language, n: number) => {
+  if (lang === "en") return n === 1 ? "Once" : `${n} times`;
+  if (n === 1) return "مرة واحدة";
+  if (n === 2) return "مرتان";
+  return n <= 10 ? `${num(lang, n)} مرات` : `${num(lang, n)} مرة`;
+};
 
-  const meaning = (d: SourceText): ChallengeSpec => {
-    const answer = excerpt(d.translation!, 160);
-    return {
-      prompt: "What does this dhikr mean?",
-      question: excerpt(d.arabic, 220),
-      sourceKey: d.key,
-      options: options(answer, pick(meanings, answer, 2, d.key), d.key),
-    };
+export const buildMorningEvening = (
+  adhkar: SourceText[],
+  lang: Language
+): CourseSpec => {
+  const ar = lang === "ar";
+  const text = (d: SourceText) => stripMarkers(ar ? d.arabic : d.translation!);
+  const usable = adhkar.filter((d) => (ar ? d.arabic : d.translation));
+
+  // "Complete the dhikr": show the opening words; options are the words that
+  // follow, from this dhikr and from other adhkar.
+  const STEM = ar ? 6 : 8;
+  const TAIL = 8;
+  const tail = (d: SourceText) => {
+    const w = words(text(d)).slice(STEM);
+    return w.length > TAIL ? `${w.slice(0, TAIL).join(" ")} …` : w.join(" ");
   };
+  const completable = usable.filter((d) => words(text(d)).length >= STEM + 3);
+  const tails = completable.map(tail);
 
+  const complete = (d: SourceText): ChallengeSpec[] =>
+    completable.includes(d)
+      ? [
+          {
+            prompt: ar ? "أكمل الذكر" : "Complete the dhikr (meaning)",
+            question: `${words(text(d)).slice(0, STEM).join(" ")} …`,
+            sourceKey: d.key,
+            options: options(
+              tail(d),
+              pick(tails, tail(d), 2, `${d.key}:tail:${lang}`),
+              `${d.key}:tail:${lang}`
+            ),
+          },
+        ]
+      : [];
+
+  const counts = [...new Set(adhkar.map((d) => d.repeat ?? 1))];
   const times = (d: SourceText): ChallengeSpec => {
-    const label = (n: number) => (n === 1 ? "Once" : `${n} times`);
     const answer = d.repeat ?? 1;
     return {
-      prompt: "How many times is it said?",
-      question: excerpt(d.arabic, 220),
+      prompt: ar ? "كم مرة يُقال هذا الذكر؟" : "How many times is it said?",
+      question: excerpt(text(d), ar ? 24 : 30),
       sourceKey: d.key,
       options: options(
-        label(answer),
-        pick(counts, answer, 2, `${d.key}:times`).map(label),
-        `${d.key}:times`
+        timesLabel(lang, answer),
+        pick(counts, answer, 2, `${d.key}:times:${lang}`).map((n) =>
+          timesLabel(lang, n)
+        ),
+        `${d.key}:times:${lang}`
       ),
     };
   };
 
   return {
-    slug: "adhkar-morning-evening",
+    slug: `adhkar-morning-evening-${lang}`,
+    language: lang,
     track: "adhkar",
-    title: "Adhkar: Morning & Evening",
+    title: ar ? "الأذكار: أذكار الصباح والمساء" : "Adhkar: Morning & Evening",
     imageSrc: "/courses/adhkar.svg",
     units: [
       {
-        title: "Morning & Evening",
-        description: "From Hisn al-Muslim (Fortress of the Muslim)",
-        lessons: chunk(withMeaning, 4).map((group, i) => ({
-          title: `Adhkar ${i * 4 + 1}–${i * 4 + group.length}`,
-          challenges: group.flatMap((d) => [meaning(d), times(d)]),
+        title: ar ? "أذكار الصباح والمساء" : "Morning & Evening",
+        description: ar
+          ? "من كتاب حصن المسلم"
+          : "From Hisn al-Muslim (Fortress of the Muslim), in English meaning",
+        lessons: chunk(usable, 4).map((group, i) => ({
+          title: `${ar ? "الأذكار" : "Adhkar"} ${range(lang, i * 4 + 1, i * 4 + group.length)}`,
+          challenges: group.flatMap((d) => [...complete(d), times(d)]),
         })),
       },
     ],

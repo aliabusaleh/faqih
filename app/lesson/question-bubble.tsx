@@ -34,7 +34,7 @@ export const QuestionBubble = ({ question }: QuestionBubbleProps) => {
         {question}
 
         <div
-          className="absolute -left-3 top-1/2 h-0 w-0 -translate-y-1/2 rotate-90 transform border-x-8 border-t-8 border-x-transparent"
+          className="absolute -left-3 top-1/2 h-0 w-0 -translate-y-1/2 rotate-90 transform border-x-8 border-t-8 border-x-transparent rtl:-right-3 rtl:left-auto rtl:-rotate-90"
           aria-hidden
         />
       </div>

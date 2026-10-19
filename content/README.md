@@ -11,6 +11,9 @@ Lessons are generated from primary texts by `npm run content:import`
 
 ## Rules
 
+- Every course is built twice: an Arabic course and an English course. A
+  question and its options are always in one language; there are no
+  translation questions.
 - Every challenge links to its `source_texts` row; the app shows the citation.
 - Wrong answers are always other real texts or real values from the data.
 - Every lesson is imported as `draft`. Only a qualified reviewer sets it to `reviewed`.
@@ -24,7 +27,7 @@ reviewer adds them from the book's footnotes to
 `references/hisn-al-muslim.json`, keyed by dhikr ID:
 
 ```json
-{ "77": "Muslim 2723" }
+{ "77": { "en": "Muslim 2723", "ar": "رواه مسلم ٢٧٢٣" } }
 ```
 
 Only add a reference after checking it against the book and the hadith

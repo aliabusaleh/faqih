@@ -7,6 +7,14 @@ declare global {
       // neon db uri
       DATABASE_URL: string;
 
+      // "en" | "ar": default language
+
+      NEXT_PUBLIC_DEFAULT_LOCALE?: string;
+
+      // "true" shows draft lessons in production
+
+      NEXT_PUBLIC_SHOW_DRAFTS?: string;
+
       // "local" enables local dev login (development only)
 
       NEXT_PUBLIC_DEV_AUTH?: string;

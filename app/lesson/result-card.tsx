@@ -1,6 +1,8 @@
 import { InfinityIcon } from "lucide-react";
 import Image from "next/image";
 
+import { useLocale, useMessages } from "@/components/locale-provider";
+import { formatNumber } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 type ResultCardProps = {
@@ -9,6 +11,8 @@ type ResultCardProps = {
 };
 
 export const ResultCard = ({ value, variant }: ResultCardProps) => {
+  const t = useMessages();
+  const locale = useLocale();
   const imageSrc = variant === "points" ? "/points.svg" : "/heart.svg";
 
   return (
@@ -26,7 +30,7 @@ export const ResultCard = ({ value, variant }: ResultCardProps) => {
           variant === "hearts" && "bg-rose-500"
         )}
       >
-        {variant === "hearts" ? "Hears Left" : "Total XP"}
+        {variant === "hearts" ? t.lesson.heartsLeft : t.lesson.totalXp}
       </div>
 
       <div
@@ -41,12 +45,12 @@ export const ResultCard = ({ value, variant }: ResultCardProps) => {
           alt={variant}
           height={30}
           width={30}
-          className="mr-1.5"
+          className="me-1.5"
         />
         {value === Infinity ? (
           <InfinityIcon className="h-6 w-6 stroke-[3]" />
         ) : (
-          value
+          formatNumber(locale, value)
         )}
       </div>
     </div>

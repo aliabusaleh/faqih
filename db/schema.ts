@@ -20,12 +20,17 @@ export const tracksEnum = pgEnum("track", [
   "fiqh",
 ]);
 
+// Each course is entirely in one language; the app shows courses in the
+// visitor's chosen language only.
+export const languageEnum = pgEnum("language", ["en", "ar"]);
+
 export const courses = pgTable("courses", {
   id: serial("id").primaryKey(),
   title: text("title").notNull(),
   imageSrc: text("image_src").notNull(),
   slug: text("slug").unique(), // e.g. "quran-al-fatiha"; set by the content importer
   track: tracksEnum("track"),
+  language: languageEnum("language").notNull().default("en"),
 });
 
 export const coursesRelations = relations(courses, ({ many }) => ({
@@ -123,7 +128,9 @@ export const sourceTexts = pgTable("source_texts", {
   translation: text("translation"),
   translationBy: text("translation_by"), // e.g. "Sahih International"
   citation: text("citation").notNull(), // e.g. "Quran 1:2", "an-Nawawi's Forty Hadith #1"
+  citationAr: text("citation_ar"), // e.g. "سورة الفاتحة: ٢"
   hadithRef: text("hadith_ref"), // takhrij, e.g. "Bukhari & Muslim"; null = needs a reviewer
+  hadithRefAr: text("hadith_ref_ar"), // e.g. "رواه البخاري ومسلم"
   sourceUrl: text("source_url").notNull(),
   audioSrc: text("audio_src"),
   repeat: integer("repeat"), // dhikr repetitions

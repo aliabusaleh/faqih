@@ -1,5 +1,8 @@
+"use client";
+
 import { BookOpenCheck, TriangleAlert } from "lucide-react";
 
+import { useLocale, useMessages } from "@/components/locale-provider";
 import { sourceTexts } from "@/db/schema";
 
 type SourceNoteProps = {
@@ -8,10 +11,19 @@ type SourceNoteProps = {
 };
 
 // Shows where a challenge's text comes from, so every answer is checkable.
+// Arabic lessons quote the original texts, so no translator is shown there.
 export const SourceNote = ({ source, isDraft }: SourceNoteProps) => {
+  const t = useMessages();
+  const locale = useLocale();
+
   if (!source && !isDraft) return null;
 
-  const needsReference = source?.kind !== "ayah" && !source?.hadithRef;
+  const isArabic = locale === "ar";
+  const citation = isArabic
+    ? (source?.citationAr ?? source?.citation)
+    : source?.citation;
+  const hadithRef = isArabic ? source?.hadithRefAr : source?.hadithRef;
+  const needsReference = source?.kind !== "ayah" && !hadithRef;
 
   return (
     <div className="mt-6 flex flex-col gap-y-1 text-xs text-muted-foreground lg:text-sm">
@@ -19,18 +31,21 @@ export const SourceNote = ({ source, isDraft }: SourceNoteProps) => {
         <p className="flex items-center gap-x-1.5">
           <BookOpenCheck className="h-4 w-4 shrink-0 text-green-600" />
           <span>
-            Source:{" "}
+            {t.source.label}:{" "}
             <a
               href={source.sourceUrl}
               target="_blank"
               rel="noreferrer noopener"
               className="font-semibold text-green-700 underline-offset-2 hover:underline"
             >
-              {source.citation}
+              {citation}
             </a>
-            {source.hadithRef && <> · {source.hadithRef}</>}
-            {source.translationBy && (
-              <> · Translation: {source.translationBy}</>
+            {hadithRef && <> · {hadithRef}</>}
+            {!isArabic && source.translationBy && (
+              <>
+                {" "}
+                · {t.source.translation}: {source.translationBy}
+              </>
             )}
           </span>
         </p>
@@ -39,8 +54,8 @@ export const SourceNote = ({ source, isDraft }: SourceNoteProps) => {
       {isDraft && (
         <p className="flex items-center gap-x-1.5 text-amber-600">
           <TriangleAlert className="h-4 w-4 shrink-0" />
-          Draft: not yet reviewed by a scholar
-          {source && needsReference && " · hadith reference pending"}
+          {t.source.draft}
+          {source && needsReference && ` · ${t.source.referencePending}`}
         </p>
       )}
     </div>

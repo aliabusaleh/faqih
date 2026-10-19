@@ -10,6 +10,7 @@ import { toast } from "sonner";
 
 import { upsertChallengeProgress } from "@/actions/challenge-progress";
 import { reduceHearts } from "@/actions/user-progress";
+import { useMessages } from "@/components/locale-provider";
 import { MAX_HEARTS } from "@/constants";
 import {
   challengeOptions,
@@ -64,6 +65,7 @@ export const Quiz = ({
     autoPlay: true,
   });
   const { width, height } = useWindowSize();
+  const t = useMessages();
 
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -142,7 +144,7 @@ export const Quiz = ({
               setHearts((prev) => Math.min(prev + 1, MAX_HEARTS));
             }
           })
-          .catch(() => toast.error("Something went wrong. Please try again."));
+          .catch(() => toast.error(t.lesson.error));
       });
     } else {
       startTransition(() => {
@@ -158,7 +160,7 @@ export const Quiz = ({
 
             if (!response?.error) setHearts((prev) => Math.max(prev - 1, 0));
           })
-          .catch(() => toast.error("Something went wrong. Please try again."));
+          .catch(() => toast.error(t.lesson.error));
       });
     }
   };
@@ -192,7 +194,7 @@ export const Quiz = ({
           />
 
           <h1 className="text-lg font-bold text-neutral-700 lg:text-3xl">
-            Great job! <br /> You&apos;ve completed the lesson.
+            {t.lesson.finished}
           </h1>
 
           <div className="flex w-full items-center gap-x-4">
@@ -215,9 +217,7 @@ export const Quiz = ({
 
   const title =
     challenge.prompt ??
-    (challenge.type === "ASSIST"
-      ? "Select the correct meaning"
-      : challenge.question);
+    (challenge.type === "ASSIST" ? t.lesson.defaultPrompt : challenge.question);
 
   return (
     <>

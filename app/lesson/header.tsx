@@ -32,7 +32,7 @@ export const Header = ({
           height={28}
           width={28}
           alt="Heart"
-          className="mr-2"
+          className="me-2"
         />
         {hasActiveSubscription ? (
           <InfinityIcon className="h-6 w-6 shrink-0 stroke-[3]" />
