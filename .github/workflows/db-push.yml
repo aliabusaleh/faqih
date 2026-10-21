@@ -1,0 +1,70 @@
+name: Update database schema
+
+# Applies db/schema.ts to the Neon database whenever the schema changes on
+# main, so the deployed app never runs against an out-of-date database.
+#
+# Runs drizzle-kit push WITHOUT --force: safe changes (new tables, columns,
+# enum values) apply automatically; anything that could delete data needs a
+# confirmation prompt, which fails this job instead. Run those by hand
+# (npx drizzle-kit push) after checking what will be lost.
+#
+# Requires the repository secret DATABASE_URL (Settings → Secrets and
+# variables → Actions).
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "db/schema.ts"
+      # The schema imports these (exercise types enum, default hearts).
+      - "lib/exercises.ts"
+      - "constants.ts"
+      - "drizzle.config.ts"
+  workflow_dispatch:
+
+concurrency:
+  group: db-push
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  push-schema:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "lts/*"
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.4
+
+      - name: Install dependencies (from bun.lock)
+        run: bun install --frozen-lockfile
+
+      - name: Check the DATABASE_URL secret
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          if [ -z "$DATABASE_URL" ]; then
+            echo "::error::Add the DATABASE_URL repository secret (Settings → Secrets and variables → Actions)."
+            exit 1
+          fi
+
+      - name: Push schema to the database
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: npx drizzle-kit push
+
+      - name: Reminder
+        run: |
+          echo "::notice::Schema is up to date. If this change needs new or rebuilt lessons (e.g. exams), run 'npm run content:import' locally; it resets progress, so it is not automatic."

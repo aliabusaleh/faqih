@@ -41,3 +41,19 @@ content rules.
 Every imported lesson starts as `draft`. Drafts always show in development.
 In production only `reviewed` lessons show, unless
 `NEXT_PUBLIC_SHOW_DRAFTS=true` (for example on a reviewers' staging site).
+
+## Database updates after a merge
+
+When a merge to `main` changes the schema (`db/schema.ts`, or the files it
+imports: `lib/exercises.ts`, `constants.ts`), the **Update database schema**
+GitHub Action (`.github/workflows/db-push.yml`) runs `drizzle-kit push`
+against the database in the `DATABASE_URL` repository secret.
+
+- One-time setup: add `DATABASE_URL` under GitHub → Settings → Secrets and
+  variables → Actions.
+- Safe changes (new tables, columns, enum values) apply automatically.
+  Changes that could delete data make the job fail on purpose; run
+  `npx drizzle-kit push` yourself after checking what will be lost.
+- It only updates the schema. If the change also needs new or rebuilt lessons,
+  run `npm run content:import` yourself (it resets progress).
+- You can also run it by hand from the Actions tab ("Run workflow").
