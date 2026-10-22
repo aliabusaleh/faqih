@@ -108,17 +108,20 @@ Also planned: Hadith (beyond an-Nawawi 1 to 10), Sirah, Quranic Arabic vocabular
 
 ### Fields
 
-- **Path:** Kids · Full Quran · Tajweed · Maher · Hadith · Adhkar · Platform
-- **Audience:** Kids · Adults · Arabic speakers · Non-Arabic speakers · All
-- **Milestone:** M0 to M7 · Later
-- **Type:** Feature · Bug · Content · Review · Docs · Infra
-- **Priority:** P0 (blocker) · P1 (this milestone) · P2 (nice to have)
-- **Size:** XS · S · M · L · XL
+- **Phase:** M0 to M7 · Later
+- **Path:** Kids · Full Quran · Tajweed · Maher · Hadith and Sirah · Platform
+- **Audience:** Kids · Adults · Arabic speakers · Non-Arabic speakers · All learners
+- **Type:** Feature · Content · Review · Decision
+- **Priority:** P0 (blocker) · P1 (this phase) · P2 (nice to have)
+- **Size:** S · M · L
+- **Start date** and **Target date:** used by the Roadmap view
+
+The board is kept in the repo: edit `.github/project/items.json` (or this README) in a pull request, and the **Sync project board info** action updates the board when it is merged.
 
 ### Before a card is Ready
 
 - [ ] Clear title: verb plus thing (e.g. "Add repeat-N-times audio for kids")
-- [ ] Path, Audience, Milestone, Type, Priority and Size set
+- [ ] Phase, Path, Audience, Type, Priority and Size set
 - [ ] Acceptance criteria ("done when...")
 - [ ] For content: the source (surah:ayah, hadith with grading, or book)
 - [ ] For UI: check Arabic (RTL) and English (LTR), and kids mode

@@ -1,8 +1,9 @@
 name: Sync project board info
 
-# Copies the project board's title, short description and README from
+# Copies the project board's title, short description, README and items from
 # .github/project/ to https://github.com/users/aliabusaleh/projects/1, so the
-# board info is edited through pull requests like the rest of the repo.
+# board is edited through pull requests like the rest of the repo. See
+# .github/project/sync.mjs for how items and fields are filled in.
 #
 # Requires the repository secret PROJECT_TOKEN (Settings → Secrets and
 # variables → Actions): a classic personal access token with the "project"
@@ -45,12 +46,12 @@ jobs:
             exit 1
           fi
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "lts/*"
+
       - name: Update the project board
         env:
           GH_TOKEN: ${{ secrets.PROJECT_TOKEN }}
-        run: |
-          gh project edit "$PROJECT_NUMBER" --owner "$PROJECT_OWNER" \
-            --title "$(cat .github/project/title.txt)" \
-            --description "$(cat .github/project/description.txt)" \
-            --readme "$(cat .github/project/README.md)"
-          echo "::notice::Project board updated: https://github.com/users/$PROJECT_OWNER/projects/$PROJECT_NUMBER"
+        run: node .github/project/sync.mjs
