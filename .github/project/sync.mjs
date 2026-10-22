@@ -63,7 +63,7 @@ const SELECT_FIELDS = {
     ["M", "YELLOW", "3 to 5 days"],
     ["L", "RED", "1 to 2 weeks"],
   ],
-  Type: [
+  "Work type": [
     ["Feature", "BLUE", "App feature"],
     ["Content", "GREEN", "Lessons, sources and texts"],
     ["Review", "PURPLE", "Scholarly review"],
@@ -71,7 +71,7 @@ const SELECT_FIELDS = {
   ],
 };
 const DATE_FIELDS = { "Start date": "start", "Target date": "target" };
-const ITEM_KEYS = { Status: "status", Phase: "phase", Path: "path", Audience: "audience", Priority: "priority", Size: "size", Type: "type" };
+const ITEM_KEYS = { Status: "status", Phase: "phase", Path: "path", Audience: "audience", Priority: "priority", Size: "size", "Work type": "type" };
 // The board's built-in Status options, used if they can't be replaced.
 const STATUS_FALLBACK = { Backlog: "Todo", Ready: "Todo", "In progress": "In Progress", "Code review": "In Progress", "Scholarly review": "In Progress", Done: "Done" };
 
