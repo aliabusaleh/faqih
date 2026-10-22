@@ -1,0 +1,56 @@
+name: Sync project board info
+
+# Copies the project board's title, short description and README from
+# .github/project/ to https://github.com/users/aliabusaleh/projects/1, so the
+# board info is edited through pull requests like the rest of the repo.
+#
+# Requires the repository secret PROJECT_TOKEN (Settings → Secrets and
+# variables → Actions): a classic personal access token with the "project"
+# scope. The built-in GITHUB_TOKEN cannot edit user-owned projects.
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/project/**"
+      - ".github/workflows/sync-project.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: sync-project
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  PROJECT_OWNER: aliabusaleh
+  PROJECT_NUMBER: 1
+
+jobs:
+  sync-project:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Check the PROJECT_TOKEN secret
+        env:
+          GH_TOKEN: ${{ secrets.PROJECT_TOKEN }}
+        run: |
+          if [ -z "$GH_TOKEN" ]; then
+            echo "::error::Add the PROJECT_TOKEN repository secret (a classic token with the project scope)."
+            exit 1
+          fi
+
+      - name: Update the project board
+        env:
+          GH_TOKEN: ${{ secrets.PROJECT_TOKEN }}
+        run: |
+          gh project edit "$PROJECT_NUMBER" --owner "$PROJECT_OWNER" \
+            --title "$(cat .github/project/title.txt)" \
+            --description "$(cat .github/project/description.txt)" \
+            --readme "$(cat .github/project/README.md)"
+          echo "::notice::Project board updated: https://github.com/users/$PROJECT_OWNER/projects/$PROJECT_NUMBER"
