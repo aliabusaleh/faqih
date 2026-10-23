@@ -80,8 +80,8 @@ part-time).** Full Quran adds ≈ 3–4 weeks, and Tajweed adds ≈ 3–4 weeks.
   an English ⇄ العربية switch saved in a cookie.
 - Clerk's sign-in and sign-up screens are in Arabic too
   (`@clerk/localizations`).
-- Left: an Arabic UI font for interface text, and an RTL check of every new
-  exercise screen from M2.
+- Arabic interface text uses Noto Naskh Arabic; Quran text uses Amiri Quran.
+- Left: an RTL check of every new exercise screen from M2.
 
 ### M2 — Exercise engine and audio 🚧 _in progress_
 
@@ -142,9 +142,11 @@ part-time).** Full Quran adds ≈ 3–4 weeks, and Tajweed adds ≈ 3–4 weeks.
 ### M4 — Beta launch (2–3 weeks)
 
 - Installable PWA with offline lessons.
-- Accessibility pass: keyboard, screen readers, contrast.
+- Accessibility pass: keyboard, screen readers, contrast (started: questions
+  are announced to screen readers, audio buttons are labelled).
 - Performance budget for low-end phones.
-- Deploy to a free host (see Hosting below).
+- ✅ Deployed on a free host: Vercel Hobby with Neon Postgres. Schema changes
+  apply automatically on merge (`.github/workflows/db-push.yml`).
 - Closed beta with 50–100 families from the local community.
 - Privacy-respecting analytics and error reporting.
 - Feedback loop and a process for reporting content corrections.

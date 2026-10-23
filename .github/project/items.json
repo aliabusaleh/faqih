@@ -40,8 +40,8 @@
   },
   {
     "title": "Arabic UI font for interface text",
-    "body": "Pick an Arabic font for buttons, menus and labels (Quran text already uses Amiri Quran).\n\n**Done when:** interface text uses the new font in Arabic mode, and it loads fast on slow connections.",
-    "status": "Backlog",
+    "body": "Pick an Arabic font for buttons, menus and labels (Quran text already uses Amiri Quran).\n\n**Done when:** interface text uses the new font in Arabic mode, and it loads fast on slow connections.\n\n**Current state:** done. In Arabic mode the whole interface uses Noto Naskh Arabic (`font-arabic` on `<body>`, `app/layout.tsx`), self-hosted with `next/font`; Quran text keeps Amiri Quran.",
+    "status": "Done",
     "phase": "M1.5",
     "path": "Platform",
     "audience": "Arabic speakers",
@@ -105,7 +105,7 @@
   },
   {
     "title": "Read aloud with qari recitation",
-    "body": "Each question's instruction is spoken and its ayat recited by a qari (al-Husary muallim for kids, Alafasy otherwise). Never synthesised Quran audio.",
+    "body": "Each question's instruction is spoken and its ayat recited by a qari (al-Husary muallim for kids, Alafasy otherwise). Never synthesised Quran audio.\n\n**Current state:** ayah audio is served from the QuranicAudio CDN mirror first, with everyayah.com as a fallback and an 8-second stall timeout (#13). Word-by-word audio comes from Quran.com.",
     "status": "Done",
     "phase": "M2",
     "path": "Kids",
@@ -248,7 +248,7 @@
   },
   {
     "title": "Decide: age range for the kids path",
-    "body": "5 to 10 for now. Confirm with teachers and parents.",
+    "body": "5 to 10 for now. Confirm with teachers and parents.\n\n**Current state:** the kids course is set to 5 to 10 in code (`minAge`/`maxAge`, `scripts/content/kids.ts`); this only needs confirming.",
     "status": "Ready",
     "phase": "M3",
     "path": "Kids",
@@ -261,7 +261,7 @@
   },
   {
     "title": "Decide: reciters for kids and adults",
-    "body": "For example al-Husary muallim for kids and Alafasy for adults. Check audio licences.",
+    "body": "For example al-Husary muallim for kids and Alafasy for adults. Check audio licences.\n\n**Current state:** the app already uses al-Husary muallim in kids mode and Alafasy in full mode (`lib/recitation.ts`), from EveryAyah via the QuranicAudio mirror. Confirm the choice and the licences.",
     "status": "Ready",
     "phase": "M3",
     "path": "Full Quran",
@@ -274,7 +274,7 @@
   },
   {
     "title": "Decide: riwayah support",
-    "body": "Hafs 'an 'Asim by default. Decide whether to support others later.",
+    "body": "Hafs 'an 'Asim by default. Decide whether to support others later.\n\n**Current state:** all text and audio are Hafs 'an 'Asim (Tanzil Uthmani text).",
     "status": "Backlog",
     "phase": "M3",
     "path": "Full Quran",
@@ -313,7 +313,7 @@
   },
   {
     "title": "Accessibility pass: keyboard, screen readers, contrast",
-    "body": "Check every screen with a keyboard and a screen reader in Arabic and English.",
+    "body": "Check every screen with a keyboard and a screen reader in Arabic and English.\n\n**Current state:** started: questions are announced to screen readers (`aria-live`), audio and replay buttons have labels, and option cards have number-key shortcuts in full mode. The full pass is still to do.",
     "status": "Backlog",
     "phase": "M4",
     "path": "Platform",
@@ -339,8 +339,8 @@
   },
   {
     "title": "Deploy to free hosting",
-    "body": "Cloudflare Workers (recommended) or Vercel Hobby. Keep the bundle small enough for the free plan.",
-    "status": "Backlog",
+    "body": "Cloudflare Workers (recommended) or Vercel Hobby. Keep the bundle small enough for the free plan.\n\n**Current state:** live on Vercel Hobby (faqih-beige.vercel.app) with a Neon Postgres database. Schema changes apply automatically on merge (see \"Automatic database schema updates on merge\").",
+    "status": "Done",
     "phase": "M4",
     "path": "Platform",
     "audience": "All learners",
@@ -351,8 +351,34 @@
     "target": "2027-01-24"
   },
   {
+    "title": "Automatic database schema updates on merge",
+    "body": "A GitHub Action (`.github/workflows/db-push.yml`) runs `drizzle-kit push` when a merge to `main` changes the schema. Changes that could delete data fail on purpose.\n\n**Current state:** done (#8). Needs the `DATABASE_URL` repository secret.",
+    "status": "Done",
+    "phase": "M4",
+    "path": "Platform",
+    "audience": "All learners",
+    "priority": "P0",
+    "size": "S",
+    "type": "Feature",
+    "start": "2026-10-21",
+    "target": "2026-10-21"
+  },
+  {
+    "title": "Leaderboard shows each learner's current name",
+    "body": "The leaderboard read names saved once, when a course was chosen, so people showed as \"User\" after setting their name. It now reads each listed learner's current name and picture from their account (never the email).\n\n**Done when:** merged and the live leaderboard shows updated names. Pull request: #16.",
+    "status": "Code review",
+    "phase": "M4",
+    "path": "Platform",
+    "audience": "All learners",
+    "priority": "P1",
+    "size": "S",
+    "type": "Feature",
+    "start": "2026-10-23",
+    "target": "2026-10-31"
+  },
+  {
     "title": "Clear translation and audio licences",
-    "body": "Confirm the English translation and audio licences, or switch to openly licensed ones, and add an attribution page.",
+    "body": "Confirm the English translation and audio licences, or switch to openly licensed ones, and add an attribution page.\n\n**Current state:** in use: Sahih International (English meaning), EveryAyah recitations (free with attribution), Quran.com word-by-word audio (licence to confirm), Hisn al-Muslim audio and text. No attribution page yet.",
     "status": "Backlog",
     "phase": "M4",
     "path": "Platform",
@@ -417,8 +443,8 @@
   },
   {
     "title": "Richer surah exams: bigger and mixed for full mode, simple for kids",
-    "body": "Surah exams grow with the surah (one question per 10 ayat, 10 to 25; Al-Baqarah 26 instead of 8) and spread over the whole surah. Full mode mixes harder, exam-only kinds: type the missing word, which ayah comes before, passages, long word and ayah orderings. Exams use their own wrong answers, different from the lessons'. Kids exams keep to simple kinds they know from lessons, with no typing.\n\n**Done when:** merged and the content re-imported.\n\nPull request: https://github.com/aliabusaleh/faqih/pull/14",
-    "status": "Code review",
+    "body": "Surah exams grow with the surah (one question per 10 ayat, 10 to 25; Al-Baqarah 26 instead of 8) and spread over the whole surah. Full mode mixes harder, exam-only kinds: type the missing word, which ayah comes before, passages, long word and ayah orderings. Exams use their own wrong answers, different from the lessons'. Kids exams keep to simple kinds they know from lessons, with no typing.\n\n**Done when:** merged and the content re-imported. Merged in #14; run `content:import` to rebuild the exams.\n\nPull request: https://github.com/aliabusaleh/faqih/pull/14",
+    "status": "Done",
     "phase": "M5",
     "path": "Full Quran",
     "audience": "Adults",
@@ -430,8 +456,8 @@
   },
   {
     "title": "Juz' exams: one exam per juz'",
-    "body": "A \"Juz' Exams\" course for full mode: one 20-question exam per juz', spread across every surah in it, including \"which surah is this ayah from?\" (never asked for an ayah that appears in more than one surah).\n\n**Done when:** merged and the content re-imported.\n\nPull request: https://github.com/aliabusaleh/faqih/pull/14",
-    "status": "Code review",
+    "body": "A \"Juz' Exams\" course for full mode: one 20-question exam per juz', spread across every surah in it, including \"which surah is this ayah from?\" (never asked for an ayah that appears in more than one surah).\n\n**Done when:** merged and the content re-imported. Merged in #14; run `content:import` to rebuild the exams.\n\nPull request: https://github.com/aliabusaleh/faqih/pull/14",
+    "status": "Done",
     "phase": "M5",
     "path": "Full Quran",
     "audience": "Adults",
@@ -443,7 +469,7 @@
   },
   {
     "title": "Hifz difficulty levels",
-    "body": "Hide 1 word, then several words, then first-letter hints, then the whole ayah.",
+    "body": "Hide 1 word, then several words, then first-letter hints, then the whole ayah.\n\n**Current state:** full-mode exams already include one recall step: type a missing word with no options.",
     "status": "Backlog",
     "phase": "M5",
     "path": "Full Quran",
@@ -456,7 +482,7 @@
   },
   {
     "title": "On-screen Arabic keyboard for typed answers",
-    "body": "Learners without an Arabic keyboard can still type answers. Matching ignores diacritics and letter variants.",
+    "body": "Learners without an Arabic keyboard can still type answers. Matching ignores diacritics and letter variants.\n\n**Current state:** lenient matching is done (`lib/arabic.ts`: no diacritics, Uthmani or everyday spelling); typed answers are used in full-mode exams. The on-screen keyboard is still to do.",
     "status": "Backlog",
     "phase": "M5",
     "path": "Full Quran",
@@ -495,7 +521,7 @@
   },
   {
     "title": "Meaning of each ayah for non-Arabic speakers",
-    "body": "Show the meaning of each ayah in the learner's language, from a licensed, reviewed translation.",
+    "body": "Show the meaning of each ayah in the learner's language, from a licensed, reviewed translation.\n\n**Current state:** English courses already use the meaning (Sahih International) for kids, the Whole Quran and Al-Fatiha. Showing the meaning next to the Arabic is still to do.",
     "status": "Backlog",
     "phase": "M5",
     "path": "Full Quran",
@@ -508,7 +534,7 @@
   },
   {
     "title": "Opt-in leaderboard and themed quests",
-    "body": "Quests like \"complete Juz Amma\". Leaderboards are always opt-in.",
+    "body": "Quests like \"complete Juz Amma\". Leaderboards are always opt-in.\n\n**Current state:** a leaderboard and points quests exist (from the original app), hidden in kids mode, but not opt-in yet.",
     "status": "Backlog",
     "phase": "M5",
     "path": "Full Quran",
