@@ -13,6 +13,7 @@ import {
   getUserProgress,
   getUserSubscription,
 } from "@/db/queries";
+import { getPublicProfiles } from "@/lib/auth";
 import { formatNumber, messages } from "@/lib/i18n";
 import { getLocale } from "@/lib/locale";
 import { getMode } from "@/lib/preferences";
@@ -32,6 +33,10 @@ const LeaderboardPage = async () => {
   ]);
 
   if (!userProgress || !userProgress.activeCourse) redirect("/courses");
+
+  // Show each person's current name and picture, not the ones saved when
+  // they first chose a course.
+  const profiles = await getPublicProfiles(leaderboard.map((u) => u.userId));
 
   const isPro = !!userSubscription?.isActive;
   const locale = await getLocale();
@@ -78,13 +83,17 @@ const LeaderboardPage = async () => {
 
               <Avatar className="me-6 ms-3 h-12 w-12 border bg-green-500">
                 <AvatarImage
-                  src={userProgress.userImageSrc}
+                  src={
+                    profiles.get(userProgress.userId)?.imageUrl ??
+                    userProgress.userImageSrc
+                  }
                   className="object-cover"
                 />
               </Avatar>
 
               <p className="flex-1 font-bold text-neutral-800">
-                {userProgress.userName}
+                {profiles.get(userProgress.userId)?.name ??
+                  userProgress.userName}
               </p>
               <p className="text-muted-foreground">
                 {t.leaderboard.xp(formatNumber(locale, userProgress.points))}
