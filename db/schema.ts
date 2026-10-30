@@ -141,7 +141,11 @@ export const challenges = pgTable(
     }),
     order: integer("order").notNull(),
   },
-  (table) => [index("challenges_lesson_id_idx").on(table.lessonId)]
+  (table) => [
+    index("challenges_lesson_id_idx").on(table.lessonId),
+    // The daily review asks about an ayah with one of its questions.
+    index("challenges_source_text_id_idx").on(table.sourceTextId),
+  ]
 );
 
 export const challengesRelations = relations(challenges, ({ one, many }) => ({

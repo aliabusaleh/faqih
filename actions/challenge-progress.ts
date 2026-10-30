@@ -6,9 +6,15 @@ import { revalidatePath } from "next/cache";
 import { MAX_HEARTS } from "@/constants";
 import db from "@/db/drizzle";
 import { getUserProgress, getUserSubscription } from "@/db/queries";
-import { challengeProgress, challenges, userProgress } from "@/db/schema";
+import {
+  challengeProgress,
+  challenges,
+  reviewItems,
+  userProgress,
+} from "@/db/schema";
 import { getAuth } from "@/lib/auth";
-import { getMode } from "@/lib/preferences";
+import { addDays } from "@/lib/day";
+import { getMode, getToday } from "@/lib/preferences";
 
 export const upsertChallengeProgress = async (challengeId: number) => {
   const { userId } = await getAuth();
@@ -75,6 +81,17 @@ export const upsertChallengeProgress = async (challengeId: number) => {
     userId,
     completed: true,
   });
+
+  // Learned: on the daily review schedule, first asked again tomorrow.
+  if (challenge.sourceTextId)
+    await db
+      .insert(reviewItems)
+      .values({
+        userId,
+        sourceTextId: challenge.sourceTextId,
+        dueOn: addDays(await getToday(), 1),
+      })
+      .onConflictDoNothing();
 
   await db
     .update(userProgress)

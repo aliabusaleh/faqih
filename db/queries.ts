@@ -7,8 +7,9 @@ import { getAuth } from "@/lib/auth";
 import { JUZ_COUNT, juzBounds } from "@/lib/juz";
 import { getLocale } from "@/lib/locale";
 import { courseInMode } from "@/lib/mode";
-import { getLastUnitId, getMode } from "@/lib/preferences";
+import { getLastUnitId, getMode, getToday } from "@/lib/preferences";
 import { computeProgress, firstOpenLesson } from "@/lib/progress";
+import { REVIEW_SIZE as DAILY_REVIEW_SIZE } from "@/lib/review";
 
 import db from "./drizzle";
 import {
@@ -17,6 +18,7 @@ import {
   courses,
   lessons,
   mistakes,
+  reviewItems,
   sourceTexts,
   surahs,
   units,
@@ -205,6 +207,111 @@ export const getReviewChallenges = cache(async () => {
   }
 
   return picked.map((challenge) => ({ ...challenge, completed: false }));
+});
+
+// The daily review (lib/review.ts): what the learner has learned and is due
+// today, each asked with one of the questions already written about it.
+
+/**
+ * Puts everything the learner has learned on the review schedule. New
+ * ayat are added as they are learned (actions/challenge-progress); this
+ * catches up what was learned before the schedule existed, spread over the
+ * next two weeks so it doesn't arrive as one long review.
+ */
+const ensureReviewItems = cache(async (userId: string, today: string) => {
+  await db.execute(sql`
+    insert into ${reviewItems} (user_id, source_text_id, box, due_on)
+    select ${userId}, learned.id, 0,
+      ${today}::date + 1 + (row_number() over (order by learned.id))::int % 14
+    from (
+      select distinct ${challenges.sourceTextId} as id
+      from ${challengeProgress}
+      join ${challenges} on ${challenges.id} = ${challengeProgress.challengeId}
+      where ${challengeProgress.userId} = ${userId}
+        and ${challengeProgress.completed}
+        and ${challenges.sourceTextId} is not null
+    ) learned
+    on conflict do nothing
+  `);
+});
+
+/**
+ * The due texts that can be asked in the learner's current language and
+ * mode (its courses), most overdue first, each with one question picked at
+ * random among those written about it.
+ */
+const dueQuestions = async (userId: string, today: string) => {
+  const courseIds = (await getCourses()).map((course) => course.id);
+  if (courseIds.length === 0) return [];
+  await ensureReviewItems(userId, today);
+
+  const { rows } = await db.execute<{
+    challenge_id: number;
+    due_on: string;
+  }>(sql`
+    select challenge_id, due_on from (
+      select distinct on (${reviewItems.sourceTextId})
+        ${challenges.id} as challenge_id, ${reviewItems.dueOn} as due_on
+      from ${reviewItems}
+      join ${challenges} on ${challenges.sourceTextId} = ${reviewItems.sourceTextId}
+      join ${lessons} on ${lessons.id} = ${challenges.lessonId}
+      join ${units} on ${units.id} = ${lessons.unitId}
+      where ${reviewItems.userId} = ${userId}
+        and ${reviewItems.dueOn} <= ${today}
+        and ${inArray(units.courseId, courseIds)}
+        ${visibleLessons ? sql`and ${visibleLessons}` : sql``}
+      order by ${reviewItems.sourceTextId}, random()
+    ) due
+    order by due_on, random()
+  `);
+  return rows;
+};
+
+/** How many texts are due today, and whether any were reviewed today. */
+export const getDailyReviewStatus = cache(async () => {
+  const { userId } = await getAuth();
+  if (!userId) return { due: 0, doneToday: false };
+
+  const today = await getToday();
+  const [due, reviewed] = await Promise.all([
+    dueQuestions(userId, today),
+    db.query.reviewItems.findFirst({
+      where: and(
+        eq(reviewItems.userId, userId),
+        eq(reviewItems.lastReviewedOn, today)
+      ),
+      columns: { id: true },
+    }),
+  ]);
+  const size = DAILY_REVIEW_SIZE[await getMode()];
+
+  return { due: Math.min(due.length, size), doneToday: !!reviewed };
+});
+
+/** Today's review: at most REVIEW_SIZE questions, with what the quiz needs. */
+export const getDailyReview = cache(async () => {
+  const { userId } = await getAuth();
+  if (!userId) return [];
+
+  const size = DAILY_REVIEW_SIZE[await getMode()];
+  const ids = (await dueQuestions(userId, await getToday()))
+    .slice(0, size)
+    .map((row) => row.challenge_id);
+  if (ids.length === 0) return [];
+
+  const rows = await db.query.challenges.findMany({
+    where: inArray(challenges.id, ids),
+    with: {
+      challengeOptions: true,
+      sourceText: true,
+      lesson: { columns: { reviewStatus: true } },
+    },
+  });
+
+  return ids
+    .map((id) => rows.find((row) => row.id === id))
+    .filter((row) => row !== undefined)
+    .map((challenge) => ({ ...challenge, completed: false }));
 });
 
 /** How many lessons ahead of the current one can be downloaded for offline use. */
