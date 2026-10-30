@@ -1,18 +1,22 @@
 import { redirect } from "next/navigation";
 
-import { getCourses, getReviewChallenges, getUserProgress } from "@/db/queries";
+import {
+  getCourses,
+  getDailyReviewStatus,
+  getUserProgress,
+} from "@/db/queries";
 import { getLocale } from "@/lib/locale";
 import { getMode } from "@/lib/preferences";
 
 import { type Mode, ModeCards } from "./mode-cards";
 
 // Learning modes: the ways to learn, side by side. Memorise (the lessons),
-// read (read mode), review (recent mistakes) and exams (juz' exams).
+// read (read mode), review (today's spaced review) and exams (juz' exams).
 const ModesPage = async () => {
   const [userProgress, courses, review, mode, locale] = await Promise.all([
     getUserProgress(),
     getCourses(),
-    getReviewChallenges(),
+    getDailyReviewStatus(),
     getMode(),
     getLocale(),
   ]);
@@ -39,17 +43,9 @@ const ModesPage = async () => {
       ...(active === exams?.id ? open(lessons?.id) : { href: "/learn" }),
     },
     { key: "read", href: "/read" },
-    // Kids mode has no hearts or exams.
-    ...(isKids
-      ? []
-      : [
-          {
-            key: "review",
-            href: "/lesson/review",
-            disabled: review.length === 0,
-          } as const,
-          ...(exams ? [{ key: "exams", ...open(exams.id) } as const] : []),
-        ]),
+    { key: "review", href: "/lesson/daily", disabled: review.due === 0 },
+    // Kids mode has no exams.
+    ...(!isKids && exams ? [{ key: "exams", ...open(exams.id) } as const] : []),
   ];
 
   return <ModeCards modes={modes} />;

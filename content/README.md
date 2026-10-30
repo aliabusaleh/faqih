@@ -44,6 +44,21 @@ guessing. Exams skip it.
 Listening questions have a "Can't listen now" button: it skips the lesson's
 listening questions without points or hearts.
 
+## Daily review
+
+What a learner has memorised comes back in a short daily review (spaced
+repetition, `lib/review.ts`), at most 10 questions a day (5 for kids):
+
+- An ayah (or hadith, dhikr) goes on the schedule the first time one of its
+  questions is answered right, and is due the next day.
+- A right first try moves it up a box: it comes back after 1, 3, 7, 14, 30,
+  60, then 120 days. A wrong one brings it back the next day.
+- No new questions are written for it: each due ayah is asked with one of
+  the questions already in the lessons and exams about it, picked at
+  random, from the courses of the learner's language and mode.
+- No hearts are lost or earned; finishing it (or a lesson) counts the day
+  for the streak.
+
 ## Exams
 
 Every unit ends with an exam (`kind: "exam"`); passing it clears the unit

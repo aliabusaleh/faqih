@@ -8,6 +8,7 @@ import { StickyWrapper } from "@/components/sticky-wrapper";
 import { UserProgress } from "@/components/user-progress";
 import {
   getCourseProgress,
+  getDailyReviewStatus,
   getUnits,
   getUserProgress,
   getUserSubscription,
@@ -18,6 +19,7 @@ import { getLastJuz, getLastUnitId, getMode } from "@/lib/preferences";
 import { Header } from "./header";
 import { JuzPicker } from "./juz-picker";
 import { ScrollToUnit } from "./scroll-to-unit";
+import { TodaysReview } from "./todays-review";
 import { TodaysWird } from "./todays-wird";
 import { UnitJump } from "./unit-jump";
 import { Unit } from "./unit";
@@ -34,12 +36,14 @@ const LearnPage = async ({ searchParams }: LearnPageProps) => {
   const courseProgressData = getCourseProgress();
   const unitsData = getUnits();
   const userSubscriptionData = getUserSubscription();
+  const dailyReviewData = getDailyReviewStatus();
 
   const [
     userProgress,
     units,
     courseProgress,
     userSubscription,
+    dailyReview,
     mode,
     lastUnitId,
     lastJuz,
@@ -48,6 +52,7 @@ const LearnPage = async ({ searchParams }: LearnPageProps) => {
     unitsData,
     courseProgressData,
     userSubscriptionData,
+    dailyReviewData,
     getMode(),
     getLastUnitId(),
     getLastJuz(),
@@ -103,6 +108,7 @@ const LearnPage = async ({ searchParams }: LearnPageProps) => {
             highlight={fromReminder}
           />
         )}
+        <TodaysReview due={dailyReview.due} doneToday={dailyReview.doneToday} />
         {/* Back to the surah of the last lesson, not the top of the list. */}
         <ScrollToUnit
           order={units.find((u) => u.id === lastUnitId)?.order ?? null}
