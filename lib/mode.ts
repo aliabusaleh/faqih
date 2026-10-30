@@ -1,7 +1,8 @@
 // Kids or full mode, chosen per device (a cookie, like the language).
 //
-// Kids mode: only kids courses, no hearts, no shop, leaderboard, review or
-// exams, and bigger, simpler lesson screens. Full mode: every other course.
+// Kids mode: only kids courses, no hearts, no shop, leaderboard, hearts
+// review or exams, and bigger, simpler lesson screens. Full mode: every other
+// course.
 
 export const MODES = ["kids", "full"] as const;
 export type Mode = (typeof MODES)[number];
@@ -25,6 +26,10 @@ export const LAST_READ_COOKIE = "last_read";
 
 // Read questions and options aloud: "1" on, "0" off. Unset: on in kids mode.
 export const READ_ALOUD_COOKIE = "read_aloud";
+
+// This device's time zone (IANA, e.g. "Asia/Jerusalem"), so the server
+// knows the learner's "today" for the daily review and the streak.
+export const TIME_ZONE_COOKIE = "tz";
 
 export const readAloudOn = (cookie: string | undefined, mode: Mode) =>
   cookie === undefined ? mode === "kids" : cookie === "1";
