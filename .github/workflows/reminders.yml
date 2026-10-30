@@ -26,6 +26,19 @@ jobs:
             echo "::notice::Add the APP_URL and CRON_SECRET repository secrets to send reminders."
             exit 0
           fi
-          curl --fail-with-body --silent --show-error --max-time 60 \
-            -H "Authorization: Bearer $CRON_SECRET" \
-            "${APP_URL%/}/api/cron/reminders"
+          response="$(curl --silent --show-error --max-time 60 \
+            --write-out "\n%{http_code}" \
+            -H "Authorization: ******" \
+            "${APP_URL%/}/api/cron/reminders")"
+          body="${response%$'\n'*}"
+          status="${response##*$'\n'}"
+          if [ "$status" = "500" ] && [ "$body" = "CRON_SECRET is not set in the app." ]; then
+            echo "::notice::CRON_SECRET is not set in the app deployment environment; skipping reminders."
+            exit 0
+          fi
+          if [ "$status" -ge 400 ]; then
+            echo "$body"
+            echo "::error::Reminder request failed with HTTP $status."
+            exit 1
+          fi
+          echo "$body"
