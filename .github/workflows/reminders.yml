@@ -36,6 +36,10 @@ jobs:
             echo "::notice::CRON_SECRET is not set in the app deployment environment; skipping reminders."
             exit 0
           fi
+          if [ "$status" = "500" ] && [ "$body" = "Push keys are not configured." ]; then
+            echo "::notice::The VAPID push keys are not set in the app deployment environment; skipping reminders (see docs/SETUP.md)."
+            exit 0
+          fi
           if [ "$status" -ge 400 ]; then
             echo "$body"
             echo "::error::Reminder request failed with HTTP $status."
