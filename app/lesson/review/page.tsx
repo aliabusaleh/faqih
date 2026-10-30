@@ -48,7 +48,7 @@ const ReviewPage = async ({ searchParams }: ReviewPageProps) => {
       initialHearts={userProgress.hearts}
       initialPercentage={0}
       userSubscription={userSubscription}
-      review={{ returnHref }}
+      review={{ kind: "hearts", returnHref }}
     />
   );
 };
