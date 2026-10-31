@@ -56,18 +56,41 @@ self.addEventListener("notificationclick", (event) => {
   );
 });
 
-// Shown for a page that wasn't downloaded, in both languages.
-const notDownloaded = () =>
+// Where each download starts, and what to call it.
+const START_PAGES = [
+  ["/learn", "تعلّم · Learn"],
+  ["/read", "القراءة · Read"],
+];
+
+// Shown for a page that wasn't downloaded, in both languages, with links to
+// what was.
+const notDownloaded = (links) =>
   new Response(
     `<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Faqih</title>
 <body style="font-family:system-ui,sans-serif;text-align:center;padding:48px 16px;color:#404040">
 <p dir="rtl" lang="ar" style="font-size:18px">أنت غير متصل، وهذه الصفحة لم تُنزَّل.</p>
 <p style="font-size:18px">You're offline, and this page wasn't downloaded.</p>
-<p><a href="/learn" style="color:#1b3a6b;font-weight:bold">تعلّم · Learn</a></p>
+${links
+  .map(
+    ([href, label]) =>
+      `<p><a href="${href}" style="color:#1b3a6b;font-weight:bold;font-size:18px">${label}</a></p>`
+  )
+  .join("")}
 </body>`,
     { status: 503, headers: { "Content-Type": "text/html; charset=utf-8" } }
   );
+
+// No connection and the page wasn't downloaded. Opening the app (it starts
+// on /learn) with only the Quran downloaded goes straight to it.
+const offlineFallback = async (url) => {
+  const saved = [];
+  for (const start of START_PAGES)
+    if (await caches.match(new URL(start[0], url).href)) saved.push(start);
+  if ((url.pathname === "/" || url.pathname === "/learn") && saved.length)
+    return Response.redirect(new URL(saved[0][0], url).href, 302);
+  return notDownloaded(saved.length ? saved : [START_PAGES[0]]);
+};
 
 // Audio elements ask for byte ranges, and Safari only plays a 206 answer.
 const withRange = async (request, response) => {
@@ -102,7 +125,7 @@ const page = async (request) => {
       }
     return response;
   } catch {
-    return (await caches.match(key)) || notDownloaded();
+    return (await caches.match(key.href)) || offlineFallback(key);
   }
 };
 
