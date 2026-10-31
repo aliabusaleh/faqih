@@ -1,4 +1,5 @@
 import { useIsKids } from "@/components/mode-provider";
+import { useQuranText } from "@/components/quran-text";
 import { type ExerciseStatus } from "@/lib/exercises";
 import { cn, isArabic } from "@/lib/utils";
 
@@ -24,6 +25,7 @@ export const WordChip = ({
   className,
 }: WordChipProps) => {
   const isKids = useIsKids();
+  const quran = useQuranText();
   return (
     <button
       type="button"
@@ -34,7 +36,9 @@ export const WordChip = ({
       className={cn(
         "relative rounded-xl border-2 border-b-4 bg-white px-3 py-2 text-neutral-700 transition hover:bg-black/5 active:border-b-2 disabled:pointer-events-none",
         isArabic(text)
-          ? "font-arabic text-lg leading-loose lg:text-xl"
+          ? quran
+            ? "font-quran text-xl leading-[2.4] lg:text-2xl"
+            : "font-arabic text-lg leading-loose lg:text-xl"
           : "text-sm lg:text-base",
         tone === "selected" && "border-brand-300 bg-brand-100 text-brand-600",
         tone === "correct" && "border-green-300 bg-green-100 text-green-600",

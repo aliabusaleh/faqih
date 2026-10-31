@@ -1,6 +1,7 @@
 import Image from "next/image";
 
 import { Meaning } from "@/components/meanings";
+import { useQuranText } from "@/components/quran-text";
 
 import { cn, isArabic } from "@/lib/utils";
 
@@ -11,6 +12,7 @@ type QuestionBubbleProps = {
 };
 
 export const QuestionBubble = ({ question, meanings }: QuestionBubbleProps) => {
+  const quran = useQuranText();
   return (
     <div className="mb-6 flex items-center gap-x-4">
       <Image
@@ -33,7 +35,10 @@ export const QuestionBubble = ({ question, meanings }: QuestionBubbleProps) => {
         aria-live="polite"
         className={cn(
           "relative whitespace-pre-line rounded-xl border-2 px-4 py-2 text-sm lg:text-base",
-          isArabic(question) && "font-arabic text-lg leading-loose lg:text-2xl"
+          isArabic(question) &&
+            (quran
+              ? "font-quran text-xl leading-[2.4] lg:text-3xl"
+              : "font-arabic text-lg leading-loose lg:text-2xl")
         )}
       >
         {question}

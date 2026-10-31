@@ -1,4 +1,3 @@
-import { normalizeArabic } from "@/lib/arabic";
 import { type OrderPayload, type ReadAloud } from "@/lib/exercises";
 
 import { type ChallengeSpec, type CourseSpec } from "./courses";
@@ -35,17 +34,9 @@ export const buildRecitationIndex = (quran: SourceText[]): Index => {
     const ref = `${ayah.surah}:${ayah.number}`;
     index.text.set(ref, ayah.arabic);
     index.ayat.set(ayah.arabic, [...(index.ayat.get(ayah.arabic) ?? []), ref]);
-    // Word audio is numbered by Uthmani words. A shown word gets audio only
-    // if the Uthmani word at the same position is the same word (ignoring
-    // diacritics and spelling), so a chip never plays the wrong word.
-    const words = ayahWords(ayah.arabic);
-    const uthmani = ayahWords(ayah.uthmani ?? ayah.arabic);
-    words.forEach((word, k) => {
-      const same =
-        uthmani[k] !== undefined &&
-        normalizeArabic(uthmani[k]) === normalizeArabic(word);
-      if (same && !index.words.has(word))
-        index.words.set(word, `${ref}:${k + 1}`);
+    // Word audio is numbered by the ayah's Uthmani words, the words shown.
+    ayahWords(ayah.arabic).forEach((word, k) => {
+      if (!index.words.has(word)) index.words.set(word, `${ref}:${k + 1}`);
     });
   }
   return index;

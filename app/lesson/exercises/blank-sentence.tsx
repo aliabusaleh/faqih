@@ -1,4 +1,5 @@
 import { Meaning } from "@/components/meanings";
+import { useQuranText } from "@/components/quran-text";
 import { cn, isArabic } from "@/lib/utils";
 
 type BlankSentenceProps = {
@@ -18,6 +19,7 @@ export const BlankSentence = ({
   meaning,
 }: BlankSentenceProps) => {
   const arabic = isArabic(before || after);
+  const quran = useQuranText();
 
   return (
     <p
@@ -25,7 +27,9 @@ export const BlankSentence = ({
       className={cn(
         "mb-6 rounded-xl border-2 px-4 py-3 text-neutral-700",
         arabic
-          ? "font-arabic text-xl leading-loose lg:text-2xl"
+          ? quran
+            ? "font-quran text-2xl leading-[2.4] lg:text-3xl"
+            : "font-arabic text-xl leading-loose lg:text-2xl"
           : "text-base lg:text-lg"
       )}
     >
