@@ -1,15 +1,31 @@
-// Offline use, only on request ("Download for offline" in Settings): the
-// learn page, the next few lessons and the files they need are saved in the
-// browser's cache, and public/sw.js serves them when there's no connection.
-// Recitation is saved too only if the learner asks: it is most of the size.
+// Offline use, only on request (Settings), in two downloads the learner
+// keeps or removes apart:
+// - "lessons": the learn page, the next few lessons and, if asked for, the
+//   recitation they play (most of the size).
+// - "quran": the whole Quran in Read mode (every surah and juz'), as text.
+// Each is saved in its own cache with the app files it needs, and
+// public/sw.js serves them when there's no connection.
 //
-// Nothing here runs, and nothing is saved, until the button is pressed.
+// Nothing here runs, and nothing is saved, until a button is pressed.
 
-export const OFFLINE_CACHE = "faqih-offline-v1";
-const META_KEY = "faqih-offline";
+export type OfflinePack = "lessons" | "quran";
+
+/** Kept in step with public/sw.js. */
+const CACHES: Record<OfflinePack, string> = {
+  lessons: "faqih-offline-v1",
+  quran: "faqih-quran-v1",
+};
+const META_KEYS: Record<OfflinePack, string> = {
+  lessons: "faqih-offline",
+  quran: "faqih-offline-quran",
+};
 export const OFFLINE_CHOICES = [5, 10, 20] as const;
 
+const SURAH_COUNT = 114;
+const JUZ_COUNT = 30;
+
 export type OfflineMeta = {
+  /** The lessons saved (none for the Quran). */
   lessons: number[];
   audio: boolean;
   bytes: number;
@@ -23,9 +39,11 @@ export const offlineSupported = () =>
   "serviceWorker" in navigator &&
   "caches" in window;
 
-export const getOfflineMeta = (): OfflineMeta | null => {
+export const getOfflineMeta = (
+  pack: OfflinePack = "lessons"
+): OfflineMeta | null => {
   try {
-    const raw = localStorage.getItem(META_KEY);
+    const raw = localStorage.getItem(META_KEYS[pack]);
     return raw ? (JSON.parse(raw) as OfflineMeta) : null;
   } catch {
     return null;
@@ -37,8 +55,9 @@ export const getOfflineMeta = (): OfflineMeta | null => {
  * it may answer requests from the cache, so it knows that as soon as it
  * starts, even with no connection.
  */
-export const registerServiceWorker = (offline = !!getOfflineMeta()) =>
-  navigator.serviceWorker.register(offline ? "/sw.js?offline=1" : "/sw.js");
+export const registerServiceWorker = (
+  offline = !!getOfflineMeta("lessons") || !!getOfflineMeta("quran")
+) => navigator.serviceWorker.register(offline ? "/sw.js?offline=1" : "/sw.js");
 
 // The app's own files a page needs: scripts, styles, fonts, images.
 const filesIn = (text: string) =>
@@ -63,39 +82,25 @@ const eachLimited = async <T>(
   );
 };
 
-export const downloadOffline = async ({
-  count,
+// Saves pages (cache key, URL to fetch), the app files they need, and audio
+// in a pack's cache, replacing what it had. Returns the pages saved.
+const savePack = async ({
+  pack,
+  pages,
   audio,
   onProgress,
 }: {
-  count: number;
-  audio: boolean;
+  pack: OfflinePack;
+  pages: [key: string, url: string][];
+  audio: string[];
   onProgress: (progress: OfflineProgress) => void;
-}): Promise<OfflineMeta> => {
-  const plan = (await fetch(
-    `/api/offline?count=${count}&audio=${audio ? 1 : 0}`
-  ).then((r) => {
-    if (!r.ok) throw new Error(`Offline plan: ${r.status}`);
-    return r.json();
-  })) as { lessons: number[]; audio: string[] };
-
-  // Start again: a new download replaces the old one.
-  await caches.delete(OFFLINE_CACHE);
-  const cache = await caches.open(OFFLINE_CACHE);
-
-  const pages: [key: string, url: string][] = [
-    ["/learn", "/learn"],
-    ...plan.lessons.map((id): [string, string] => [
-      `/lesson/${id}`,
-      `/lesson/${id}?offline=1`,
-    ]),
-  ];
-  // "/lesson" opens the current lesson, the first one downloaded.
-  if (plan.lessons[0]) pages.push(["/lesson", `/lesson/${plan.lessons[0]}`]);
+}) => {
+  await caches.delete(CACHES[pack]);
+  const cache = await caches.open(CACHES[pack]);
 
   const progress = {
     done: 0,
-    total: pages.length + plan.audio.length,
+    total: pages.length + audio.length,
     bytes: 0,
   };
   const step = (bytes: number) => {
@@ -110,7 +115,7 @@ export const downloadOffline = async ({
     if (saved.has(key)) return null;
     saved.add(key);
     const response = await fetch(url);
-    // A lesson that isn't open (yet) sends the learner back to /learn.
+    // A page that isn't open (yet) sends the learner elsewhere.
     if (!response.ok || response.redirected) return null;
     const body = await response.blob();
     await cache.put(
@@ -123,14 +128,13 @@ export const downloadOffline = async ({
     return body;
   };
 
-  const lessons: number[] = [];
+  const savedPages: string[] = [];
   const files = new Set<string>();
   await eachLimited(pages, async ([key, url]) => {
     const body = await save(key, url);
     if (body) {
       for (const file of filesIn(await body.text())) files.add(file);
-      const id = Number(/^\/lesson\/(\d+)$/.exec(key)?.[1]);
-      if (id) lessons.push(id);
+      savedPages.push(key);
     }
     step(body?.size ?? 0);
   });
@@ -159,28 +163,92 @@ export const downloadOffline = async ({
   });
 
   // Recitation hosts allow it (CORS), so its size can be counted.
-  await eachLimited(plan.audio, async (url) => {
+  await eachLimited(audio, async (url) => {
     const body = await save(url).catch(() => null);
     step(body?.size ?? 0);
   });
 
-  if (lessons.length === 0) throw new Error("No lessons to download.");
+  return { savedPages, bytes: progress.bytes };
+};
 
-  const meta: OfflineMeta = {
-    lessons: plan.lessons.filter((id) => lessons.includes(id)),
-    audio,
-    bytes: progress.bytes,
-    savedAt: Date.now(),
-  };
-  localStorage.setItem(META_KEY, JSON.stringify(meta));
+const finish = async (pack: OfflinePack, meta: OfflineMeta) => {
+  localStorage.setItem(META_KEYS[pack], JSON.stringify(meta));
   await registerServiceWorker(true);
   return meta;
 };
 
-export const removeOffline = async () => {
-  localStorage.removeItem(META_KEY);
-  await caches.delete(OFFLINE_CACHE);
-  // Keep the worker for reminders, but without offline answers.
+export const downloadOffline = async ({
+  count,
+  audio,
+  onProgress,
+}: {
+  count: number;
+  audio: boolean;
+  onProgress: (progress: OfflineProgress) => void;
+}): Promise<OfflineMeta> => {
+  const plan = (await fetch(
+    `/api/offline?count=${count}&audio=${audio ? 1 : 0}`
+  ).then((r) => {
+    if (!r.ok) throw new Error(`Offline plan: ${r.status}`);
+    return r.json();
+  })) as { lessons: number[]; audio: string[] };
+
+  const pages: [key: string, url: string][] = [
+    ["/learn", "/learn"],
+    ...plan.lessons.map((id): [string, string] => [
+      `/lesson/${id}`,
+      `/lesson/${id}?offline=1`,
+    ]),
+  ];
+  // "/lesson" opens the current lesson, the first one downloaded.
+  if (plan.lessons[0]) pages.push(["/lesson", `/lesson/${plan.lessons[0]}`]);
+
+  const { savedPages, bytes } = await savePack({
+    pack: "lessons",
+    pages,
+    audio: plan.audio,
+    onProgress,
+  });
+  const lessons = plan.lessons.filter((id) =>
+    savedPages.includes(`/lesson/${id}`)
+  );
+  if (lessons.length === 0) throw new Error("No lessons to download.");
+
+  return finish("lessons", { lessons, audio, bytes, savedAt: Date.now() });
+};
+
+/** The whole Quran in Read mode: every surah and juz', as text. */
+export const downloadQuran = async (
+  onProgress: (progress: OfflineProgress) => void
+): Promise<OfflineMeta> => {
+  const paths = [
+    "/read",
+    ...Array.from({ length: SURAH_COUNT }, (_, i) => `/read/surah/${i + 1}`),
+    ...Array.from({ length: JUZ_COUNT }, (_, i) => `/read/juz/${i + 1}`),
+  ];
+  const { savedPages, bytes } = await savePack({
+    pack: "quran",
+    pages: paths.map((path): [string, string] => [path, path]),
+    audio: [],
+    onProgress,
+  });
+  // All of it, or the download didn't finish.
+  if (savedPages.length < paths.length)
+    throw new Error("Quran download incomplete.");
+
+  return finish("quran", {
+    lessons: [],
+    audio: false,
+    bytes,
+    savedAt: Date.now(),
+  });
+};
+
+export const removeOffline = async (pack: OfflinePack = "lessons") => {
+  localStorage.removeItem(META_KEYS[pack]);
+  await caches.delete(CACHES[pack]);
+  // Keep the worker for reminders; it answers offline only while something
+  // is still downloaded.
   const registration = await navigator.serviceWorker.getRegistration("/");
-  if (registration) await registerServiceWorker(false);
+  if (registration) await registerServiceWorker();
 };
