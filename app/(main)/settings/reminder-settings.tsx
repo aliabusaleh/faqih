@@ -7,6 +7,7 @@ import { toast } from "sonner";
 
 import { deleteReminder, getReminder, saveReminder } from "@/actions/reminders";
 import { useLocale, useMessages } from "@/components/locale-provider";
+import { registerServiceWorker } from "@/lib/offline";
 import { cn } from "@/lib/utils";
 
 const DEFAULT_TIME = "07:00";
@@ -82,7 +83,8 @@ export const ReminderSettings = () => {
         setStatus("denied");
         return;
       }
-      const registration = await navigator.serviceWorker.register("/sw.js");
+      // Keeps offline use on, if it was downloaded (lib/offline).
+      const registration = await registerServiceWorker();
       await navigator.serviceWorker.ready;
       const subscription =
         (await registration.pushManager.getSubscription()) ??

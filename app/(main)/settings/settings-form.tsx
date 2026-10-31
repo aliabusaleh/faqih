@@ -26,6 +26,7 @@ import {
 } from "@/lib/mode";
 import { cn } from "@/lib/utils";
 
+import { OfflineSettings } from "./offline-settings";
 import { ReminderSettings } from "./reminder-settings";
 
 const Choice = ({
@@ -120,6 +121,7 @@ export const SettingsForm = () => {
       </section>
 
       <ReminderSettings />
+      <OfflineSettings />
 
       <section className="flex flex-col gap-y-3">
         <h2 className="text-lg font-bold text-neutral-700">

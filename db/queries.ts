@@ -207,7 +207,15 @@ export const getReviewChallenges = cache(async () => {
   return picked.map((challenge) => ({ ...challenge, completed: false }));
 });
 
-export const getLesson = cache(async (id?: number) => {
+/** How many lessons ahead of the current one can be downloaded for offline use. */
+export const OFFLINE_MAX_LESSONS = 20;
+
+/**
+ * `offline`: a download for offline use (lib/offline) may also get the
+ * lessons right after the current one, still locked, so they can be done
+ * without a connection.
+ */
+export const getLesson = cache(async (id?: number, offline = false) => {
   const { userId } = await getAuth();
 
   if (!userId) return null;
@@ -221,7 +229,15 @@ export const getLesson = cache(async (id?: number) => {
   const courseLessons = (await getUnits()).flatMap((unit) => unit.lessons);
   const position = courseLessons.findIndex((lesson) => lesson.id === lessonId);
   const lessonState = courseLessons[position];
-  if (!lessonState || lessonState.locked) return null;
+  const current = courseLessons.findIndex(
+    (lesson) => lesson.id === courseProgress.activeLessonId
+  );
+  const ahead =
+    offline &&
+    current >= 0 &&
+    position > current &&
+    position <= current + OFFLINE_MAX_LESSONS;
+  if (!lessonState || (lessonState.locked && !ahead)) return null;
 
   // The lesson after this one in the course (e.g. ayat 11-15 after 6-10, or
   // the unit's exam): "Continue" goes there, and it is preloaded.

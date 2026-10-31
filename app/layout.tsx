@@ -11,6 +11,7 @@ import { preconnect } from "react-dom";
 
 import { LocaleProvider } from "@/components/locale-provider";
 import { ModeProvider } from "@/components/mode-provider";
+import { OfflineBanner } from "@/components/offline-banner";
 import { ReadAloudProvider } from "@/components/read-aloud";
 import { ExitModal } from "@/components/modals/exit-modal";
 import { HeartsModal } from "@/components/modals/hearts-modal";
@@ -88,6 +89,7 @@ export default async function RootLayout({
           <ModeProvider mode={mode}>
             <ReadAloudProvider enabled={readAloud}>
               <Toaster theme="light" richColors closeButton />
+              <OfflineBanner />
               <ExitModal />
               <HeartsModal />
               <PracticeModal />
