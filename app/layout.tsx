@@ -13,6 +13,7 @@ import { LocaleProvider } from "@/components/locale-provider";
 import { ModeProvider } from "@/components/mode-provider";
 import { OfflineBanner } from "@/components/offline-banner";
 import { ReadAloudProvider } from "@/components/read-aloud";
+import { TimeZoneCookie } from "@/components/time-zone-cookie";
 import { ExitModal } from "@/components/modals/exit-modal";
 import { HeartsModal } from "@/components/modals/hearts-modal";
 import { PracticeModal } from "@/components/modals/practice-modal";
@@ -90,6 +91,7 @@ export default async function RootLayout({
             <ReadAloudProvider enabled={readAloud}>
               <Toaster theme="light" richColors closeButton />
               <OfflineBanner />
+              <TimeZoneCookie />
               <ExitModal />
               <HeartsModal />
               <PracticeModal />

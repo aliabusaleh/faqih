@@ -1,5 +1,7 @@
 import { cookies } from "next/headers";
 
+import { localDate } from "@/lib/day";
+
 import {
   DEFAULT_MODE,
   LAST_JUZ_COOKIE,
@@ -7,6 +9,7 @@ import {
   LAST_UNIT_COOKIE,
   MODE_COOKIE,
   READ_ALOUD_COOKIE,
+  TIME_ZONE_COOKIE,
   TOUR_COOKIE,
   isMode,
   readAloudOn,
@@ -41,3 +44,7 @@ export const getLastJuz = async () => {
   const value = Number((await cookies()).get(LAST_JUZ_COOKIE)?.value);
   return Number.isInteger(value) && value > 0 ? value : null;
 };
+
+/** The learner's date today, in this device's time zone (else UTC). */
+export const getToday = async () =>
+  localDate((await cookies()).get(TIME_ZONE_COOKIE)?.value);

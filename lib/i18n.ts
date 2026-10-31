@@ -100,6 +100,19 @@ const en = {
   review: {
     done: "Your hearts are back. Carry on with your lesson!",
   },
+  daily: {
+    title: "Today's review",
+    due: (n: number, count: string) =>
+      n === 1
+        ? "1 question on what you've memorised"
+        : `${count} questions on what you've memorised`,
+    start: "Review",
+    done: "Today's review is done. See you tomorrow!",
+    doneToday: "Done for today. See you tomorrow!",
+  },
+  streak: {
+    label: "Days in a row",
+  },
   study: {
     title: "Read first",
     intro:
@@ -200,9 +213,10 @@ const en = {
     },
     review: {
       title: "Review",
-      body: "Go over your recent mistakes and earn hearts back.",
+      body: "A few questions a day on what you've memorised, so it stays with you.",
     },
-    reviewEmpty: "Finish a lesson first, then review it here.",
+    reviewEmpty:
+      "Nothing to review today: learn a lesson, or come back tomorrow.",
     exams: { title: "Exams", body: "Test yourself on a whole juz'." },
   },
   leaderboard: {
@@ -377,6 +391,23 @@ const ar: Messages = {
   review: {
     done: "عادت إليك قلوبك. تابع درسك!",
   },
+  daily: {
+    title: "مراجعة اليوم",
+    due: (n: number, count: string) =>
+      n === 1
+        ? "سؤال واحد على ما حفظت"
+        : n === 2
+          ? "سؤالان على ما حفظت"
+          : n <= 10
+            ? `${count} أسئلة على ما حفظت`
+            : `${count} سؤالًا على ما حفظت`,
+    start: "راجِع",
+    done: "أتممت مراجعة اليوم. نلقاك غدًا!",
+    doneToday: "تمّت مراجعة اليوم. نلقاك غدًا!",
+  },
+  streak: {
+    label: "أيام متتالية",
+  },
   study: {
     title: "اقرأ أولًا",
     intro: "اقرأ واستمع إلى ما يتناوله هذا الدرس، ثم أجب عن الأسئلة.",
@@ -482,9 +513,9 @@ const ar: Messages = {
     },
     review: {
       title: "المراجعة",
-      body: "راجع أخطاءك الأخيرة واستعد قلوبك.",
+      body: "أسئلة قليلة كل يوم على ما حفظت، كي يثبت في صدرك.",
     },
-    reviewEmpty: "أنهِ درسًا أولًا، ثم راجعه هنا.",
+    reviewEmpty: "لا مراجعة اليوم: تعلّم درسًا، أو عُد غدًا.",
     exams: { title: "الاختبارات", body: "اختبر نفسك في جزء كامل." },
   },
   leaderboard: {

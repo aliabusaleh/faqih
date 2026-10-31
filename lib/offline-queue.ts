@@ -1,11 +1,14 @@
 // Answers given with no connection: kept on the device, in order, and sent
 // through the usual server actions once the learner is back online
 // (components/offline-banner). Nothing is lost if the tab is closed.
+// A lesson finished offline is kept too, with its day, so that day still
+// counts for the streak.
 
 import {
   skipListening,
   upsertChallengeProgress,
 } from "@/actions/challenge-progress";
+import { recordActiveDay } from "@/actions/review";
 import { reduceHearts } from "@/actions/user-progress";
 
 const QUEUE_KEY = "faqih-offline-answers";
@@ -13,7 +16,8 @@ const CHANGED = "faqih-offline-answers";
 
 export type QueuedAnswer =
   | { kind: "correct" | "wrong"; challengeId: number }
-  | { kind: "skip"; challengeIds: number[] };
+  | { kind: "skip"; challengeIds: number[] }
+  | { kind: "day"; day: string };
 
 export const queuedAnswers = (): QueuedAnswer[] => {
   try {
@@ -38,12 +42,15 @@ export const onQueueChange = (listener: () => void) => {
 
 export const queueAnswer = (answer: QueuedAnswer) => {
   const answers = queuedAnswers();
-  // A question answered right twice counts once, as it would online.
+  // A question answered right twice counts once, as it would online; so
+  // does a day.
   if (
-    answer.kind === "correct" &&
-    answers.some(
-      (a) => a.kind === "correct" && a.challengeId === answer.challengeId
-    )
+    (answer.kind === "correct" &&
+      answers.some(
+        (a) => a.kind === "correct" && a.challengeId === answer.challengeId
+      )) ||
+    (answer.kind === "day" &&
+      answers.some((a) => a.kind === "day" && a.day === answer.day))
   )
     return;
   store([...answers, answer]);
@@ -72,6 +79,7 @@ export const syncAnswers = () =>
           if (answer.kind === "skip") await skipListening(answer.challengeIds);
           else if (answer.kind === "correct")
             await upsertChallengeProgress(answer.challengeId);
+          else if (answer.kind === "day") await recordActiveDay(answer.day);
           else await reduceHearts(answer.challengeId);
         } catch (error) {
           // Still offline: try again later. Anything else (a question that

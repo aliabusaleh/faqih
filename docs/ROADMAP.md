@@ -135,7 +135,7 @@ part-time).** Full Quran adds ≈ 3–4 weeks, and Tajweed adds ≈ 3–4 weeks.
 ### M3 — Kids track (3–4 weeks, runs alongside M2; content is the bottleneck)
 
 - Al-Fatiha and the last 10 surahs: listen, repeat, order and complete.
-- Repetition through a spaced-repetition review queue, plus a daily goal and
+- ✅ Repetition through a spaced-repetition review queue, plus a daily goal and
   streak.
 - Short stories of the Prophet ﷺ and the Sahabah, each with a short quiz.
 - Short facts about the Prophet ﷺ (family, Makkah and Madinah, character).
@@ -170,8 +170,9 @@ part-time).** Full Quran adds ≈ 3–4 weeks, and Tajweed adds ≈ 3–4 weeks.
 - Typed Arabic answers with an on-screen Arabic keyboard. Matching ignores
   diacritics and letter variants (hamza/alif forms, ta marbuta).
 - Surah recitation: play ayah by ayah, with repeat and slow replay.
-- Hifz review queue across the whole Quran, plus opt-in leaderboard and
-  themed quests (e.g. "complete Juz Amma").
+- ✅ Hifz review queue across the whole Quran (the daily review, per ayah;
+  `content/README.md`).
+- Opt-in leaderboard and themed quests (e.g. "complete Juz Amma").
 
 ### M6 — Tajweed (3–4 weeks)
 

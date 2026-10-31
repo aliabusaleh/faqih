@@ -1,6 +1,7 @@
 import { relations } from "drizzle-orm";
 import {
   boolean,
+  date,
   index,
   integer,
   jsonb,
@@ -140,7 +141,11 @@ export const challenges = pgTable(
     }),
     order: integer("order").notNull(),
   },
-  (table) => [index("challenges_lesson_id_idx").on(table.lessonId)]
+  (table) => [
+    index("challenges_lesson_id_idx").on(table.lessonId),
+    // The daily review asks about an ayah with one of its questions.
+    index("challenges_source_text_id_idx").on(table.sourceTextId),
+  ]
 );
 
 export const challengesRelations = relations(challenges, ({ one, many }) => ({
@@ -264,6 +269,11 @@ export const userProgress = pgTable("user_progress", {
   }),
   hearts: integer("hearts").notNull().default(MAX_HEARTS),
   points: integer("points").notNull().default(0),
+  // Days in a row with a lesson or the daily review finished, in the
+  // learner's own time zone (lib/review.ts nextStreak).
+  streak: integer("streak").notNull().default(0),
+  bestStreak: integer("best_streak").notNull().default(0),
+  lastActiveOn: date("last_active_on"), // "YYYY-MM-DD", local date
 });
 
 export const userProgressRelations = relations(userProgress, ({ one }) => ({
@@ -293,6 +303,35 @@ export const mistakesRelations = relations(mistakes, ({ one }) => ({
   challenge: one(challenges, {
     fields: [mistakes.challengeId],
     references: [challenges.id],
+  }),
+}));
+
+// The daily review (spaced repetition): each ayah, hadith or dhikr a learner
+// has learned, and when to ask about it again. A right answer moves it up a
+// box and further away; a wrong one brings it back tomorrow (lib/review.ts).
+export const reviewItems = pgTable(
+  "review_items",
+  {
+    id: serial("id").primaryKey(),
+    userId: text("user_id").notNull(),
+    sourceTextId: integer("source_text_id")
+      .references(() => sourceTexts.id, { onDelete: "cascade" })
+      .notNull(),
+    box: integer("box").notNull().default(0),
+    dueOn: date("due_on").notNull(), // "YYYY-MM-DD", local date
+    lastReviewedOn: date("last_reviewed_on"),
+    lapses: integer("lapses").notNull().default(0),
+  },
+  (table) => [
+    unique().on(table.userId, table.sourceTextId),
+    index("review_items_user_id_due_on_idx").on(table.userId, table.dueOn),
+  ]
+);
+
+export const reviewItemsRelations = relations(reviewItems, ({ one }) => ({
+  sourceText: one(sourceTexts, {
+    fields: [reviewItems.sourceTextId],
+    references: [sourceTexts.id],
   }),
 }));
 

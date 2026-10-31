@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 
 import { BookOpen, Volume2 } from "lucide-react";
 import Image from "next/image";
@@ -13,7 +13,11 @@ import {
   skipListening,
   upsertChallengeProgress,
 } from "@/actions/challenge-progress";
-import { reviewAnswer } from "@/actions/review";
+import {
+  answerDailyReview,
+  recordActiveDay,
+  reviewAnswer,
+} from "@/actions/review";
 import { reduceHearts } from "@/actions/user-progress";
 import { useLocale, useMessages } from "@/components/locale-provider";
 import { PreloadPage } from "@/components/preload-page";
@@ -37,6 +41,7 @@ import {
   type OrderPayload,
   usesOptions,
 } from "@/lib/exercises";
+import { localDate } from "@/lib/day";
 import { formatNumber } from "@/lib/i18n";
 import { LAST_UNIT_COOKIE, setPreferenceCookie } from "@/lib/mode";
 import { isOfflineError, queueAnswer } from "@/lib/offline-queue";
@@ -64,10 +69,13 @@ type QuizProps = {
   /** Remembered on the device, so the learn page returns to this surah. */
   unitId?: number;
   /**
-   * A hearts review (app/lesson/review): each right answer gives a heart
-   * back, a wrong one costs nothing, and the end returns to the lesson.
+   * A review, then back to `returnHref`.
+   * - "hearts" (app/lesson/review): each right answer gives a heart back,
+   *   a wrong one costs nothing.
+   * - "daily" (app/lesson/daily): the day's spaced review. The first try at
+   *   each question moves its ayah on the schedule; no hearts either way.
    */
-  review?: { returnHref: string };
+  review?: { kind: "hearts" | "daily"; returnHref: string };
   /** Read first: the texts the lesson is about, shown before the questions. */
   studyTexts?: (typeof sourceTexts.$inferSelect)[];
   /**
@@ -132,6 +140,10 @@ export const Quiz = ({
 
   const [lessonId] = useState(initialLessonId);
   const [hearts, setHearts] = useState(initialHearts);
+  // Daily review: questions already tried (only the first try counts), and
+  // the points earned.
+  const tried = useRef(new Set<number>());
+  const [earned, setEarned] = useState(0);
   const [percentage, setPercentage] = useState(() => {
     return initialPercentage === 100 ? 0 : initialPercentage;
   });
@@ -382,6 +394,33 @@ export const Quiz = ({
       isCorrect = correctOption.id === selectedOption;
     }
 
+    if (review?.kind === "daily") {
+      const first = !tried.current.has(challenge.id);
+      tried.current.add(challenge.id);
+      if (!isCorrect) {
+        void incorrectControls.play();
+        encourage(t.lesson.wrong);
+        setStatus("wrong");
+        if (first)
+          answerDailyReview(challenge.id, false).catch(() =>
+            toast.error(t.lesson.error)
+          );
+        return;
+      }
+      startTransition(() => {
+        (first ? answerDailyReview(challenge.id, true) : Promise.resolve())
+          .then(() => {
+            void correctControls.play();
+            encourage(t.lesson.correct);
+            setStatus("correct");
+            if (first) setEarned((prev) => prev + 10);
+            setPercentage((prev) => prev + 100 / challenges.length);
+          })
+          .catch(() => toast.error(t.lesson.error));
+      });
+      return;
+    }
+
     if (review) {
       // Review: a right answer earns a heart back; a wrong one costs nothing.
       if (!isCorrect) {
@@ -453,6 +492,7 @@ export const Quiz = ({
         {nextLesson && !review && (
           <PreloadPage href={`/lesson/${nextLesson.id}`} />
         )}
+        {review?.kind !== "hearts" && <CountsForStreak />}
         <Confetti
           recycle={false}
           numberOfPieces={500}
@@ -478,17 +518,22 @@ export const Quiz = ({
           />
 
           <h1 className="text-lg font-bold text-neutral-700 lg:text-3xl">
-            {review
-              ? t.review.done
-              : isExam
-                ? t.lesson.examPassed
-                : t.lesson.finished}
+            {review?.kind === "daily"
+              ? t.daily.done
+              : review
+                ? t.review.done
+                : isExam
+                  ? t.lesson.examPassed
+                  : t.lesson.finished}
           </h1>
 
           <div className="flex w-full items-center gap-x-4">
-            {/* A review earns hearts, not points. */}
-            {!review && (
-              <ResultCard variant="points" value={challenges.length * 10} />
+            {/* A hearts review earns hearts, not points. */}
+            {review?.kind !== "hearts" && (
+              <ResultCard
+                variant="points"
+                value={review ? earned : challenges.length * 10}
+              />
             )}
             {!isKids && (
               <ResultCard
@@ -717,4 +762,16 @@ export const Quiz = ({
       </QuranTextProvider>
     </MeaningsProvider>
   );
+};
+
+/** Finishing a lesson or the day's review: today counts for the streak. */
+const CountsForStreak = () => {
+  useMount(() => {
+    // Offline: kept with today's date, and sent once back online.
+    const today = localDate(undefined);
+    recordActiveDay().catch((error: unknown) => {
+      if (isOfflineError(error)) queueAnswer({ kind: "day", day: today });
+    });
+  });
+  return null;
 };

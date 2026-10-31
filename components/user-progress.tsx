@@ -2,6 +2,7 @@ import { InfinityIcon } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
+import { Streak } from "@/components/streak";
 import { Button } from "@/components/ui/button";
 import { features } from "@/config";
 import { courses } from "@/db/schema";
@@ -35,6 +36,8 @@ export const UserProgress = ({
           />
         </Button>
       </Link>
+
+      <Streak />
 
       {!hideHearts && (
         <>
