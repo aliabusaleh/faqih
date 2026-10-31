@@ -41,6 +41,7 @@ import {
   type OrderPayload,
   usesOptions,
 } from "@/lib/exercises";
+import { localDate } from "@/lib/day";
 import { formatNumber } from "@/lib/i18n";
 import { LAST_UNIT_COOKIE, setPreferenceCookie } from "@/lib/mode";
 import { isOfflineError, queueAnswer } from "@/lib/offline-queue";
@@ -766,7 +767,11 @@ export const Quiz = ({
 /** Finishing a lesson or the day's review: today counts for the streak. */
 const CountsForStreak = () => {
   useMount(() => {
-    recordActiveDay().catch(() => undefined);
+    // Offline: kept with today's date, and sent once back online.
+    const today = localDate(undefined);
+    recordActiveDay().catch((error: unknown) => {
+      if (isOfflineError(error)) queueAnswer({ kind: "day", day: today });
+    });
   });
   return null;
 };

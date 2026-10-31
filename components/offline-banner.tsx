@@ -20,7 +20,8 @@ export const OfflineBanner = () => {
   const [waiting, setWaiting] = useState(0);
 
   useEffect(() => {
-    const count = () => setWaiting(queuedAnswers().length);
+    const count = () =>
+      setWaiting(queuedAnswers().filter((a) => a.kind !== "day").length);
     const sync = async () => {
       if (!navigator.onLine || queuedAnswers().length === 0) return;
       const sent = await syncAnswers();

@@ -1,4 +1,4 @@
-import { addDays } from "@/lib/day";
+import { addDays, isDate } from "@/lib/day";
 import type { Mode } from "@/lib/mode";
 
 // The daily review: spaced repetition, one schedule per learned ayah (or
@@ -36,6 +36,21 @@ export const nextStreak = (
     bestStreak: Math.max(bestStreak, next),
     lastActiveOn: today,
   };
+};
+
+/** How many days back a day finished offline still counts. */
+export const OFFLINE_DAYS = 7;
+
+/**
+ * The day to count when the device sends one (a lesson finished offline,
+ * lib/offline-queue): a real day, at most OFFLINE_DAYS back and not in the
+ * future. Null if it can't count. Without one, `today`.
+ */
+export const activeDay = (day: unknown, today: string) => {
+  if (day === undefined) return today;
+  if (!isDate(day) || day > today || day < addDays(today, -OFFLINE_DAYS))
+    return null;
+  return day;
 };
 
 /** The streak to show: broken if neither today nor yesterday counted. */

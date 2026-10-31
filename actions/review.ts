@@ -15,7 +15,7 @@ import {
 } from "@/db/schema";
 import { getAuth } from "@/lib/auth";
 import { getToday } from "@/lib/preferences";
-import { nextSchedule, nextStreak } from "@/lib/review";
+import { activeDay, nextSchedule, nextStreak } from "@/lib/review";
 
 /**
  * A right answer in a hearts review: one heart back, and the mistake is
@@ -112,20 +112,26 @@ export const answerDailyReview = async (
   revalidatePath("/leaderboard");
 };
 
-/** A lesson or the day's review is finished: today counts for the streak. */
-export const recordActiveDay = async () => {
+/**
+ * A lesson or the day's review is finished: today counts for the streak.
+ * `day`: a lesson finished offline, sent once back online (lib/review
+ * activeDay). Days only count forward: one before the last day that
+ * counted can't change the streak.
+ */
+export const recordActiveDay = async (day?: string) => {
   const { userId } = await getAuth();
   if (!userId) throw new Error("Unauthorized.");
 
   const progress = await getUserProgress();
   if (!progress) return;
 
-  const today = await getToday();
-  if (progress.lastActiveOn === today) return;
+  const active = activeDay(day, await getToday());
+  if (!active || (progress.lastActiveOn && active <= progress.lastActiveOn))
+    return;
 
   await db
     .update(userProgress)
-    .set(nextStreak(progress, today))
+    .set(nextStreak(progress, active))
     .where(eq(userProgress.userId, userId));
 
   revalidatePath("/learn");

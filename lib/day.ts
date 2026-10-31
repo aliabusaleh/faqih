@@ -11,6 +11,13 @@ export const localDate = (timeZone: string | undefined, now = new Date()) => {
   }
 };
 
+/** Whether `value` is a real date written "YYYY-MM-DD". */
+export const isDate = (value: unknown): value is string =>
+  typeof value === "string" &&
+  /^\d{4}-\d{2}-\d{2}$/.test(value) &&
+  !Number.isNaN(Date.parse(`${value}T00:00:00Z`)) &&
+  addDays(value, 0) === value;
+
 /** The date `days` after `date` (both "YYYY-MM-DD"). */
 export const addDays = (date: string, days: number) => {
   const d = new Date(`${date}T00:00:00Z`);
