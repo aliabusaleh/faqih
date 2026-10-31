@@ -5,6 +5,7 @@ import { useKey } from "react-use";
 
 import { Meaning } from "@/components/meanings";
 import { useIsKids } from "@/components/mode-provider";
+import { useQuranText } from "@/components/quran-text";
 import { isSpeakable, useReadAloud } from "@/components/read-aloud";
 import { challenges } from "@/db/schema";
 import { LIST_TYPES } from "@/lib/exercises";
@@ -44,6 +45,7 @@ export const Card = ({
   const audioRef = useRef<HTMLAudioElement>(null);
   const isList = LIST_TYPES.includes(type);
   const isKids = useIsKids();
+  const quran = useQuranText();
   const readAloud = useReadAloud();
 
   const handleClick = useCallback(() => {
@@ -97,7 +99,10 @@ export const Card = ({
           dir="auto"
           className={cn(
             "text-sm text-neutral-600 lg:text-base",
-            isArabic(text) && "font-arabic text-lg leading-loose lg:text-xl",
+            isArabic(text) &&
+              (quran
+                ? "font-quran text-xl leading-[2.4] lg:text-2xl"
+                : "font-arabic text-lg leading-loose lg:text-xl"),
             isKids && "text-xl lg:text-2xl",
             selected && "text-brand-500",
             selected && status === "correct" && "text-green-500",

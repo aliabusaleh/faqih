@@ -3,6 +3,7 @@
 import { useState } from "react";
 
 import { useMessages } from "@/components/locale-provider";
+import { useQuranText } from "@/components/quran-text";
 import { answersMatch } from "@/lib/arabic";
 import { type Answer, type ExerciseStatus } from "@/lib/exercises";
 import { cn, isArabic } from "@/lib/utils";
@@ -26,6 +27,8 @@ export const TypedAnswer = ({
   const t = useMessages();
   const [value, setValue] = useState("");
   const arabic = isArabic(answer);
+  // The learner types in everyday spelling; the answer shown is Quran.
+  const quran = useQuranText();
 
   const onChange = (next: string) => {
     setValue(next);
@@ -70,7 +73,13 @@ export const TypedAnswer = ({
       {status === "wrong" && (
         <p dir="auto" className="text-sm text-rose-600">
           {t.lesson.correctAnswer}{" "}
-          <span className={cn(arabic && "font-arabic text-lg")}>{answer}</span>
+          <span
+            className={cn(
+              arabic && (quran ? "font-quran text-xl" : "font-arabic text-lg")
+            )}
+          >
+            {answer}
+          </span>
         </p>
       )}
     </div>

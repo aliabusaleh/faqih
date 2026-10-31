@@ -18,6 +18,7 @@ import { reduceHearts } from "@/actions/user-progress";
 import { useLocale, useMessages } from "@/components/locale-provider";
 import { PreloadPage } from "@/components/preload-page";
 import { MeaningsProvider } from "@/components/meanings";
+import { QuranTextProvider } from "@/components/quran-text";
 import { useIsKids, useMode } from "@/components/mode-provider";
 import { type Step, isSpeakable, useReadAloud } from "@/components/read-aloud";
 import { MAX_HEARTS } from "@/constants";
@@ -532,160 +533,162 @@ export const Quiz = ({
 
   return (
     <MeaningsProvider meanings={meanings}>
-      {incorrectAudio}
-      {correctAudio}
-      <Header
-        hearts={hearts}
-        percentage={percentage}
-        hasActiveSubscription={!!userSubscription?.isActive}
-        hideHearts={isKids}
-      />
+      <QuranTextProvider value={challenge.sourceText?.kind === "ayah"}>
+        {incorrectAudio}
+        {correctAudio}
+        <Header
+          hearts={hearts}
+          percentage={percentage}
+          hasActiveSubscription={!!userSubscription?.isActive}
+          hideHearts={isKids}
+        />
 
-      {/* The question scrolls on its own between header and footer, so the
+        {/* The question scrolls on its own between header and footer, so the
           Check button stays in view. It is centred only while it fits:
           my-auto (not items-center) never pushes a long question's top out
           of reach. */}
-      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
-        <div className="flex min-h-full justify-center py-6">
-          <div className="my-auto flex w-full flex-col gap-y-12 px-6 lg:min-h-[350px] lg:w-[600px] lg:px-0">
-            <div className="flex items-center justify-center gap-x-3 lg:justify-start">
-              {/* Announced to screen readers on every new question. */}
-              <h1
-                aria-live="polite"
-                className="text-center text-lg font-bold text-neutral-700 lg:text-start lg:text-3xl"
-              >
-                {title}
-              </h1>
-              {/* Forgot the ayat? Read them again, then carry on. */}
-              {studies && backTexts.length > 0 && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    stop();
-                    setStudying("back");
-                  }}
-                  aria-label={t.lesson.backToAyat}
-                  title={t.lesson.backToAyat}
-                  className="shrink-0 rounded-xl border-2 border-b-4 p-2 text-gold-700 hover:bg-black/5 active:border-b-2"
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+          <div className="flex min-h-full justify-center py-6">
+            <div className="my-auto flex w-full flex-col gap-y-12 px-6 lg:min-h-[350px] lg:w-[600px] lg:px-0">
+              <div className="flex items-center justify-center gap-x-3 lg:justify-start">
+                {/* Announced to screen readers on every new question. */}
+                <h1
+                  aria-live="polite"
+                  className="text-center text-lg font-bold text-neutral-700 lg:text-start lg:text-3xl"
                 >
-                  <BookOpen className="h-6 w-6" />
-                </button>
-              )}
-              {/* Replay works even when read-aloud is off in Settings. */}
-              {openingSteps.length > 0 && (
-                <button
-                  type="button"
-                  onClick={() => play(openingSteps)}
-                  aria-label={t.lesson.listenAgain}
-                  className="shrink-0 rounded-xl border-2 border-b-4 p-2 text-brand-500 hover:bg-black/5 active:border-b-2"
-                >
-                  <Volume2 className="h-6 w-6" />
-                </button>
-              )}
-            </div>
+                  {title}
+                </h1>
+                {/* Forgot the ayat? Read them again, then carry on. */}
+                {studies && backTexts.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      stop();
+                      setStudying("back");
+                    }}
+                    aria-label={t.lesson.backToAyat}
+                    title={t.lesson.backToAyat}
+                    className="shrink-0 rounded-xl border-2 border-b-4 p-2 text-gold-700 hover:bg-black/5 active:border-b-2"
+                  >
+                    <BookOpen className="h-6 w-6" />
+                  </button>
+                )}
+                {/* Replay works even when read-aloud is off in Settings. */}
+                {openingSteps.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => play(openingSteps)}
+                    aria-label={t.lesson.listenAgain}
+                    className="shrink-0 rounded-xl border-2 border-b-4 p-2 text-brand-500 hover:bg-black/5 active:border-b-2"
+                  >
+                    <Volume2 className="h-6 w-6" />
+                  </button>
+                )}
+              </div>
 
-            <div>
-              {(challenge.type === "ASSIST" ||
-                challenge.type === "TRUE_FALSE" ||
-                challenge.type === "COMPLETE_AYAH") && (
-                <QuestionBubble
-                  question={challenge.question}
-                  meanings={(challenge.readAloud?.ayat ?? [])
-                    .map((ref) => meanings[ref])
-                    .filter((m): m is string => !!m)}
-                />
-              )}
-
-              {challenge.type === "LISTEN" && listenUrls.length > 0 && (
-                <>
-                  <AudioPlayer urls={listenUrls} />
-                  {status === "none" && (
-                    <button
-                      type="button"
-                      disabled={pending}
-                      onClick={onCantListen}
-                      className="mx-auto mb-6 block text-sm font-bold text-brand-500 hover:underline"
-                    >
-                      {t.lesson.cantListen}
-                    </button>
-                  )}
-                </>
-              )}
-
-              {challenge.type === "COMPLETE_WORD" && (
-                <BlankSentence
-                  meaning={
-                    meanings[
-                      challenge.sourceText?.key.replace(/^quran:/, "") ?? ""
-                    ]
-                  }
-                  before={(payload as CompleteWordPayload).before}
-                  after={(payload as CompleteWordPayload).after}
-                  fill={optionBased ? selectedText : undefined}
-                />
-              )}
-
-              {optionBased && (
-                <Challenge
-                  options={options}
-                  onSelect={onSelect}
-                  status={status}
-                  selectedOption={selectedOption}
-                  disabled={pending}
-                  type={challenge.type}
-                />
-              )}
-
-              {challenge.type === "ORDER" && (
-                <OrderExercise
-                  key={exerciseKey}
-                  words={(payload as OrderPayload).words}
-                  recitations={(payload as OrderPayload).recitations}
-                  seed={challenge.id}
-                  status={status}
-                  onAnswer={setAnswer}
-                />
-              )}
-
-              {challenge.type === "MATCH" && (
-                <MatchExercise
-                  key={exerciseKey}
-                  pairs={(payload as MatchPayload).pairs}
-                  seed={challenge.id}
-                  status={status}
-                  onAnswer={setAnswer}
-                />
-              )}
-
-              {!optionBased &&
-                (challenge.type === "COMPLETE_WORD" ||
+              <div>
+                {(challenge.type === "ASSIST" ||
+                  challenge.type === "TRUE_FALSE" ||
                   challenge.type === "COMPLETE_AYAH") && (
-                  <TypedAnswer
-                    key={exerciseKey}
-                    answer={
-                      (payload as CompleteWordPayload | CompleteAyahPayload)
-                        .answer
+                  <QuestionBubble
+                    question={challenge.question}
+                    meanings={(challenge.readAloud?.ayat ?? [])
+                      .map((ref) => meanings[ref])
+                      .filter((m): m is string => !!m)}
+                  />
+                )}
+
+                {challenge.type === "LISTEN" && listenUrls.length > 0 && (
+                  <>
+                    <AudioPlayer urls={listenUrls} />
+                    {status === "none" && (
+                      <button
+                        type="button"
+                        disabled={pending}
+                        onClick={onCantListen}
+                        className="mx-auto mb-6 block text-sm font-bold text-brand-500 hover:underline"
+                      >
+                        {t.lesson.cantListen}
+                      </button>
+                    )}
+                  </>
+                )}
+
+                {challenge.type === "COMPLETE_WORD" && (
+                  <BlankSentence
+                    meaning={
+                      meanings[
+                        challenge.sourceText?.key.replace(/^quran:/, "") ?? ""
+                      ]
                     }
-                    multiline={challenge.type === "COMPLETE_AYAH"}
+                    before={(payload as CompleteWordPayload).before}
+                    after={(payload as CompleteWordPayload).after}
+                    fill={optionBased ? selectedText : undefined}
+                  />
+                )}
+
+                {optionBased && (
+                  <Challenge
+                    options={options}
+                    onSelect={onSelect}
+                    status={status}
+                    selectedOption={selectedOption}
+                    disabled={pending}
+                    type={challenge.type}
+                  />
+                )}
+
+                {challenge.type === "ORDER" && (
+                  <OrderExercise
+                    key={exerciseKey}
+                    words={(payload as OrderPayload).words}
+                    recitations={(payload as OrderPayload).recitations}
+                    seed={challenge.id}
                     status={status}
                     onAnswer={setAnswer}
                   />
                 )}
 
-              <SourceNote
-                source={challenge.sourceText}
-                isDraft={reviewStatus !== "reviewed"}
-              />
+                {challenge.type === "MATCH" && (
+                  <MatchExercise
+                    key={exerciseKey}
+                    pairs={(payload as MatchPayload).pairs}
+                    seed={challenge.id}
+                    status={status}
+                    onAnswer={setAnswer}
+                  />
+                )}
+
+                {!optionBased &&
+                  (challenge.type === "COMPLETE_WORD" ||
+                    challenge.type === "COMPLETE_AYAH") && (
+                    <TypedAnswer
+                      key={exerciseKey}
+                      answer={
+                        (payload as CompleteWordPayload | CompleteAyahPayload)
+                          .answer
+                      }
+                      multiline={challenge.type === "COMPLETE_AYAH"}
+                      status={status}
+                      onAnswer={setAnswer}
+                    />
+                  )}
+
+                <SourceNote
+                  source={challenge.sourceText}
+                  isDraft={reviewStatus !== "reviewed"}
+                />
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <Footer
-        disabled={pending || !ready}
-        status={status}
-        onCheck={onContinue}
-      />
+        <Footer
+          disabled={pending || !ready}
+          status={status}
+          onCheck={onContinue}
+        />
+      </QuranTextProvider>
     </MeaningsProvider>
   );
 };
