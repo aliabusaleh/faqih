@@ -56,23 +56,30 @@ export const Study = ({
   const ar = locale === "ar";
   const { enabled, play, preload } = useReadAloud();
 
-  // Read, then answer: the texts heard to the end so far, and whether
-  // there has been time to read them all.
+  // Read, then answer: the texts heard to the end so far, and the seconds
+  // left to read them all (shown on the Start button as a countdown).
   const [heard, setHeard] = useState<ReadonlySet<string>>(new Set());
-  const [readTime, setReadTime] = useState(!requireReading);
-  useEffect(() => {
-    if (!requireReading) return;
+  const readMs = useMemo(() => {
+    if (!requireReading) return 0;
     const words = texts
       .map((text) => text.arabic.split(/\s+/).length)
       .reduce((a, b) => a + b, 0);
-    const ms = Math.min(
-      MAX_READ_MS,
-      Math.max(MIN_READ_MS, words * MS_PER_WORD)
-    );
-    const timer = setTimeout(() => setReadTime(true), ms);
-    return () => clearTimeout(timer);
+    return Math.min(MAX_READ_MS, Math.max(MIN_READ_MS, words * MS_PER_WORD));
   }, [requireReading, texts]);
-  const ready = readTime || texts.every((text) => heard.has(text.key));
+  const [secondsLeft, setSecondsLeft] = useState(() =>
+    Math.ceil(readMs / 1000)
+  );
+  useEffect(() => {
+    if (!readMs) return;
+    const end = Date.now() + readMs;
+    const timer = setInterval(() => {
+      const left = Math.max(0, Math.ceil((end - Date.now()) / 1000));
+      setSecondsLeft(left);
+      if (!left) clearInterval(timer);
+    }, 250);
+    return () => clearInterval(timer);
+  }, [readMs]);
+  const ready = secondsLeft === 0 || texts.every((text) => heard.has(text.key));
 
   // A text's sound, then a mark that it was heard to the end (a step that
   // only runs if nothing stopped the one before it).
@@ -234,7 +241,12 @@ export const Study = ({
           onClick={onStart}
           disabled={!ready}
         >
-          {startLabel ?? t.study.start}
+          {ready
+            ? (startLabel ?? t.study.start)
+            : t.study.startIn(
+                startLabel ?? t.study.start,
+                formatNumber(locale, secondsLeft)
+              )}
         </Button>
       </div>
     </div>

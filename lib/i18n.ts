@@ -99,6 +99,8 @@ const en = {
       "Read and listen to what this lesson is about, then answer the questions.",
     playAll: "Listen to all",
     start: "Start the questions",
+    // The Start button while the reading time runs: "Start the questions (7s)".
+    startIn: (label: string, seconds: string) => `${label} (${seconds}s)`,
     part: (n: string, total: string) => `Part ${n} of ${total}`,
     listenFirst:
       "Listen to each ayah, or take a moment to read it, before the questions.",
@@ -329,6 +331,7 @@ const ar: Messages = {
     intro: "اقرأ واستمع إلى ما يتناوله هذا الدرس، ثم أجب عن الأسئلة.",
     playAll: "استمع للكل",
     start: "ابدأ الأسئلة",
+    startIn: (label: string, seconds: string) => `${label} (${seconds} ث)`,
     part: (n: string, total: string) => `المقطع ${n} من ${total}`,
     listenFirst: "استمع إلى كل آية، أو خذ وقتك في قراءتها، قبل الأسئلة.",
     backToQuestions: "عُد إلى الأسئلة",
