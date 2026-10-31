@@ -7,8 +7,7 @@ import { InviteButton } from "@/components/invite";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { Logo } from "@/components/logo";
 import { useMessages } from "@/components/locale-provider";
-import { useIsKids } from "@/components/mode-provider";
-import { features } from "@/config";
+import { useNavItems } from "@/components/nav-items";
 import { cn } from "@/lib/utils";
 
 import { SidebarItem } from "./sidebar-item";
@@ -17,9 +16,10 @@ type SidebarProps = {
   className?: string;
 };
 
+// The menu on wide screens. Phones get the tab bar (bottom-nav.tsx) instead.
 export const Sidebar = ({ className }: SidebarProps) => {
   const t = useMessages();
-  const isKids = useIsKids();
+  const { items, settings } = useNavItems();
 
   return (
     <div
@@ -34,33 +34,11 @@ export const Sidebar = ({ className }: SidebarProps) => {
         </div>
       </Link>
 
-      <div className="flex flex-1 flex-col gap-y-2">
-        <SidebarItem label={t.nav.learn} href="/learn" iconSrc="/learn.svg" />
-        <SidebarItem label={t.nav.read} href="/read" iconSrc="/read.svg" />
-        <SidebarItem label={t.nav.modes} href="/modes" iconSrc="/modes.svg" />
-        {/* Kids mode keeps the menu short: no points, hearts or rankings. */}
-        {!isKids && (
-          <>
-            <SidebarItem
-              label={t.nav.leaderboard}
-              href="/leaderboard"
-              iconSrc="/leaderboard.svg"
-            />
-            {features.shop && (
-              <SidebarItem
-                label={t.nav.shop}
-                href="/shop"
-                iconSrc="/shop.svg"
-              />
-            )}
-          </>
-        )}
-        <SidebarItem
-          label={t.nav.settings}
-          href="/settings"
-          iconSrc="/mascot.svg"
-        />
-      </div>
+      <nav aria-label={t.nav.menu} className="flex flex-1 flex-col gap-y-2">
+        {[...items, settings].map((item) => (
+          <SidebarItem key={item.href} {...item} />
+        ))}
+      </nav>
 
       <div className="flex flex-col items-start gap-y-3 p-4">
         <InviteButton />

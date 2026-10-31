@@ -114,7 +114,7 @@ export const Reader = ({
 
   return (
     <div className="mx-auto flex w-full max-w-[760px] flex-col gap-y-6 px-6 pb-16">
-      <div className="sticky top-0 z-10 flex items-center justify-between gap-x-3 border-b-2 bg-white py-3">
+      <div className="sticky top-[56px] z-10 flex items-center justify-between gap-x-3 border-b-2 bg-white py-3 lg:top-0">
         <Link href="/read">
           <Button size="sm" variant="ghost" aria-label={t.read.back}>
             <ArrowLeft className="h-5 w-5 stroke-2 text-neutral-400 rtl:rotate-180" />

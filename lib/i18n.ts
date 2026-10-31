@@ -36,13 +36,20 @@ const en = {
   },
   nav: {
     learn: "Learn",
+    courses: "Courses",
     read: "Read",
     leaderboard: "Leaderboard",
     modes: "Modes",
     shop: "Shop",
     settings: "Settings",
+    menu: "Main menu",
   },
-  courses: { title: "Courses" },
+  courses: {
+    title: "Courses",
+    subtitle: "Pick what to learn. You can switch any time.",
+    current: "Current course",
+    change: "Change course",
+  },
   learn: {
     continue: "Continue",
     start: "Start",
@@ -273,13 +280,20 @@ const ar: Messages = {
   },
   nav: {
     learn: "تعلّم",
+    courses: "الدورات",
     read: "القراءة",
     leaderboard: "المتصدّرون",
     modes: "الأنماط",
     shop: "المتجر",
     settings: "الإعدادات",
+    menu: "القائمة الرئيسية",
   },
-  courses: { title: "الدورات" },
+  courses: {
+    title: "الدورات",
+    subtitle: "اختر ما تتعلّمه، ويمكنك التبديل متى شئت.",
+    current: "الدورة الحالية",
+    change: "تغيير الدورة",
+  },
   learn: {
     continue: "تابع",
     start: "ابدأ",

@@ -21,7 +21,7 @@ import { features, links } from "@/config";
 // Clerk components only render when Clerk is in use; local dev login
 // (NEXT_PUBLIC_DEV_AUTH=local) gets simple stand-ins with no Clerk provider.
 
-const LocalUserBadge = () => {
+const LocalUserBadge = ({ compact }: { compact?: boolean }) => {
   const t = useMessages();
 
   return (
@@ -33,9 +33,11 @@ const LocalUserBadge = () => {
         width={32}
         className="rounded-full border"
       />
-      <span className="text-sm font-semibold text-neutral-600">
-        {t.auth.devUser}
-      </span>
+      {!compact && (
+        <span className="text-sm font-semibold text-neutral-600">
+          {t.auth.devUser}
+        </span>
+      )}
     </div>
   );
 };
@@ -51,8 +53,9 @@ const SourceCodeLink = ({ className }: { className?: string }) => (
   </Link>
 );
 
-export const UserMenu = () => {
-  if (features.localAuth) return <LocalUserBadge />;
+/** The account button. `compact`: just the picture, for the phone's top bar. */
+export const UserMenu = ({ compact }: { compact?: boolean }) => {
+  if (features.localAuth) return <LocalUserBadge compact={compact} />;
 
   return (
     <>

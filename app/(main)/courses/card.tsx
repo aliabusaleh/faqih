@@ -24,7 +24,7 @@ export const Card = ({
     <div
       onClick={() => onClick(id)}
       className={cn(
-        "flex h-full min-h-[217px] min-w-[200px] cursor-pointer flex-col items-center justify-between rounded-xl border-2 border-b-[4px] p-3 pb-6 hover:bg-black/5 active:border-b-2",
+        "flex h-full min-h-[180px] cursor-pointer flex-col items-center justify-between rounded-xl border-2 border-b-[4px] p-3 pb-6 hover:bg-black/5 active:border-b-2 lg:min-h-[217px] lg:min-w-[200px]",
         disabled && "pointer-events-none opacity-50"
       )}
     >

@@ -89,7 +89,10 @@ const LearnPage = async ({ searchParams }: LearnPageProps) => {
         <InviteCard />
       </StickyWrapper>
       <FeedWrapper>
-        <Header title={userProgress.activeCourse.title} />
+        <Header
+          title={userProgress.activeCourse.title}
+          imageSrc={userProgress.activeCourse.imageSrc}
+        />
         {/* Today's wird is the likely next tap: have it ready. */}
         {wird && <PreloadPage href={`/lesson/${wird.id}`} />}
         {wird && wirdUnit && (
