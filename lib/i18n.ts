@@ -185,6 +185,9 @@ const en = {
     retry: "Retry",
     continue: "Continue",
     practiceAgain: "Practice again",
+    // End of a lesson: go on to the next one (already preloaded) or go back.
+    nextWird: "Next wird",
+    backToMain: "Back to main",
     finished: "Great job! You've completed the lesson.",
     totalXp: "Total XP",
     heartsLeft: "Hearts left",
@@ -421,6 +424,8 @@ const ar: Messages = {
     retry: "أعد المحاولة",
     continue: "متابعة",
     practiceAgain: "تدرّب مجددًا",
+    nextWird: "الورد التالي",
+    backToMain: "العودة للرئيسية",
     finished: "أحسنت! لقد أتممت الدرس.",
     totalXp: "مجموع النقاط",
     heartsLeft: "القلوب المتبقية",

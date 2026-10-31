@@ -13,13 +13,17 @@ const SLOW_RATE = 0.75;
 // through the lesson's sound queue, so it never overlaps other sounds.
 export const AudioPlayer = ({ urls }: { urls: string[] }) => {
   const t = useMessages();
-  const { enabled, play } = useReadAloud();
+  const { enabled, play, stop } = useReadAloud();
 
   // Play once when a new ayah is shown. With read-aloud on, the lesson
   // already reads the instruction and then plays this ayah.
   useEffect(() => {
     if (!enabled) play([{ kind: "audio", urls }]);
   }, [enabled, play, urls]);
+
+  // Answering before the recitation ends must not carry it into the next
+  // question: stop when this player goes away.
+  useEffect(() => stop, [stop]);
 
   return (
     <div className="mb-6 flex items-center justify-center gap-x-4">

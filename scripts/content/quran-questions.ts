@@ -23,7 +23,9 @@ const ORDER_MIN_WORDS = 3;
 const ORDER_MAX_WORDS = 10;
 const MATCH_PAIRS = 4;
 const EXCERPT_WORDS = 5;
-const PASSAGE_EXCERPT_WORDS = 8;
+// "Put the ayat in order" shows each ayah in full; longer ayat would make
+// chips too big to move around, so their order question is skipped instead.
+const ORDER_AYAH_MAX_WORDS = 40;
 
 // The words of an ayah. Marks that stand alone are kept with a word, so a
 // learner never has to place a bare mark: waqf (pause) marks with the word
@@ -375,12 +377,12 @@ export const quranQuestions = (
     };
   };
 
-  // Put three consecutive ayat in order.
+  // Put three consecutive ayat in order, each shown in full (no excerpts).
   const orderAyat = (i: number, count = 3): ChallengeSpec | null => {
     if (i + count > ayat.length) return null;
-    const chips = own
-      .slice(i, i + count)
-      .map((t) => excerpt(t, PASSAGE_EXCERPT_WORDS));
+    const chips = own.slice(i, i + count);
+    if (chips.some((t) => ayahWords(t).length > ORDER_AYAH_MAX_WORDS))
+      return null;
     // Identical chips would make more than one order right.
     if (new Set(chips).size < chips.length) return null;
     return {

@@ -11,6 +11,10 @@ type FooterProps = {
   status: "correct" | "wrong" | "none" | "completed";
   disabled?: boolean;
   lessonId?: number;
+  /** Lesson finished: the main button's text, e.g. "Next wird". */
+  continueLabel?: string;
+  /** Lesson finished: a second way out, back to the learn page. */
+  onHome?: () => void;
 };
 
 export const Footer = ({
@@ -18,6 +22,8 @@ export const Footer = ({
   status,
   disabled,
   lessonId,
+  continueLabel,
+  onHome,
 }: FooterProps) => {
   useKey("Enter", onCheck, {}, [onCheck]);
   const t = useMessages();
@@ -51,14 +57,27 @@ export const Footer = ({
           </div>
         )}
 
-        {status === "completed" && lessonId && (
-          <Button
-            variant="default"
-            className={responsiveSize}
-            onClick={() => (window.location.href = `/lesson/${lessonId}`)}
-          >
-            {t.lesson.practiceAgain}
-          </Button>
+        {status === "completed" && (onHome || lessonId) && (
+          <div className="flex items-center gap-x-2">
+            {onHome && (
+              <Button
+                variant="primaryOutline"
+                className={responsiveSize}
+                onClick={onHome}
+              >
+                {t.lesson.backToMain}
+              </Button>
+            )}
+            {lessonId && (
+              <Button
+                variant="ghost"
+                className={responsiveSize}
+                onClick={() => (window.location.href = `/lesson/${lessonId}`)}
+              >
+                {t.lesson.practiceAgain}
+              </Button>
+            )}
+          </div>
         )}
 
         <Button
@@ -71,7 +90,7 @@ export const Footer = ({
           {status === "none" && t.lesson.check}
           {status === "correct" && t.lesson.next}
           {status === "wrong" && t.lesson.retry}
-          {status === "completed" && t.lesson.continue}
+          {status === "completed" && (continueLabel ?? t.lesson.continue)}
         </Button>
       </div>
     </footer>

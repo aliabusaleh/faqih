@@ -472,9 +472,15 @@ export const Quiz = ({
           </div>
         </div>
 
+        {/* Say where "continue" goes: straight into the next wird (it is
+            already preloaded), with a way back to the learn page too. */}
         <Footer
           lessonId={review ? undefined : lessonId}
           status="completed"
+          continueLabel={!review && nextLesson ? t.lesson.nextWird : undefined}
+          onHome={
+            !review && nextLesson ? () => router.push("/learn") : undefined
+          }
           onCheck={() =>
             router.push(
               review?.returnHref ??
@@ -499,7 +505,7 @@ export const Quiz = ({
           hasActiveSubscription={!!userSubscription?.isActive}
           hideHearts={isKids}
         />
-        <div className="flex flex-1 justify-center overflow-y-auto pt-8">
+        <div className="flex min-h-0 flex-1 justify-center overflow-y-auto overscroll-contain pt-8">
           <Study
             key={`${part}:${studying}`}
             texts={studying === "back" ? backTexts : readingFor(activeIndex)}
@@ -535,9 +541,13 @@ export const Quiz = ({
         hideHearts={isKids}
       />
 
-      <div className="flex-1">
-        <div className="flex h-full items-center justify-center">
-          <div className="flex w-full flex-col gap-y-12 px-6 lg:min-h-[350px] lg:w-[600px] lg:px-0">
+      {/* The question scrolls on its own between header and footer, so the
+          Check button stays in view. It is centred only while it fits:
+          my-auto (not items-center) never pushes a long question's top out
+          of reach. */}
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+        <div className="flex min-h-full justify-center py-6">
+          <div className="my-auto flex w-full flex-col gap-y-12 px-6 lg:min-h-[350px] lg:w-[600px] lg:px-0">
             <div className="flex items-center justify-center gap-x-3 lg:justify-start">
               {/* Announced to screen readers on every new question. */}
               <h1
