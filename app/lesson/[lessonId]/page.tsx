@@ -8,12 +8,14 @@ type LessonIdPageProps = {
   params: Promise<{
     lessonId: string;
   }>;
+  searchParams: Promise<{ offline?: string }>;
 };
 
-const LessonIdPage = async ({ params }: LessonIdPageProps) => {
+const LessonIdPage = async ({ params, searchParams }: LessonIdPageProps) => {
   const { lessonId } = await params;
+  const { offline } = await searchParams;
 
-  const lessonData = getLesson(Number(lessonId));
+  const lessonData = getLesson(Number(lessonId), offline === "1");
   const userProgressData = getUserProgress();
   const userSubscriptionData = getUserSubscription();
 

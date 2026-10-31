@@ -38,6 +38,7 @@ import {
 } from "@/lib/exercises";
 import { formatNumber } from "@/lib/i18n";
 import { LAST_UNIT_COOKIE, setPreferenceCookie } from "@/lib/mode";
+import { isOfflineError, queueAnswer } from "@/lib/offline-queue";
 import { recitationAudio } from "@/lib/recitation";
 import { useHeartsModal } from "@/store/use-hearts-modal";
 import { usePracticeModal } from "@/store/use-practice-modal";
@@ -312,6 +313,10 @@ export const Quiz = ({
       .map((c) => c.id);
     startTransition(() => {
       skipListening(ids)
+        .catch((error: unknown) => {
+          if (!isOfflineError(error)) throw error;
+          queueAnswer({ kind: "skip", challengeIds: ids });
+        })
         .then(() => {
           stop();
           setPercentage((prev) =>
@@ -323,6 +328,27 @@ export const Quiz = ({
         .catch(() => toast.error(t.lesson.error));
     });
   };
+
+  // No connection (a lesson downloaded for offline use): the answer is kept
+  // on the device and sent later (lib/offline-queue). The hearts rules are
+  // the server's, applied here on what this page knows.
+  const subscribed = !!userSubscription?.isActive;
+  const saveCorrect = () =>
+    upsertChallengeProgress(challenge.id).catch((error: unknown) => {
+      if (!isOfflineError(error)) throw error;
+      if (hearts === 0 && !challenge.completed && !subscribed && !isKids)
+        return { error: "hearts" as const };
+      queueAnswer({ kind: "correct", challengeId: challenge.id });
+    });
+  const saveWrong = () =>
+    reduceHearts(challenge.id).catch((error: unknown) => {
+      if (!isOfflineError(error)) throw error;
+      queueAnswer({ kind: "wrong", challengeId: challenge.id });
+      if (challenge.completed) return { error: "practice" as const };
+      if (isKids) return { error: "kids" as const };
+      if (subscribed) return { error: "subscription" as const };
+      if (hearts === 0) return { error: "hearts" as const };
+    });
 
   const onNext = () => {
     setActiveIndex((current) => current + 1);
@@ -379,7 +405,7 @@ export const Quiz = ({
 
     if (isCorrect) {
       startTransition(() => {
-        upsertChallengeProgress(challenge.id)
+        saveCorrect()
           .then((response) => {
             if (response?.error === "hearts") {
               openHeartsModal(lessonId);
@@ -400,7 +426,7 @@ export const Quiz = ({
       });
     } else {
       startTransition(() => {
-        reduceHearts(challenge.id)
+        saveWrong()
           .then((response) => {
             if (response?.error === "hearts") {
               openHeartsModal(lessonId);

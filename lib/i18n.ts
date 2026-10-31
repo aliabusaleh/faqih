@@ -119,6 +119,33 @@ const en = {
     title: "Your daily wird",
     body: "A few minutes with the Quran: today's lesson is ready.",
   },
+  offline: {
+    title: "Use offline",
+    description:
+      "Download your next lessons to keep learning with no connection. Nothing is downloaded until you press the button.",
+    lessons: "Lessons to download",
+    lessonsCount: (_n: number, shown: string) => `${shown} lessons`,
+    audio: "Include recitation audio",
+    audioDescription: "So the ayat can be heard offline. Uses much more space.",
+    download: "Download for offline",
+    downloading: (done: string, total: string) =>
+      `Downloading… ${done} of ${total}`,
+    again: "Download again",
+    remove: "Remove offline data",
+    removed: "Offline data removed.",
+    saved: "Ready to use offline.",
+    ready: (n: string, size: string) =>
+      `Lessons ready offline: ${n} (${size}).`,
+    withAudio: "With recitation.",
+    textOnly: "Text only, without recitation.",
+    mb: (n: string) => `${n} MB`,
+    unsupported: "This browser can't save Faqih for offline use.",
+    failed: "The download didn't finish. Check your connection and try again.",
+    banner: "You're offline. Downloaded lessons still work.",
+    bannerWaiting: (n: string) =>
+      `You're offline. ${n} answers will be saved when you're back online.`,
+    synced: "Your offline answers are saved.",
+  },
   tour: {
     skip: "Skip",
     next: "Next",
@@ -365,6 +392,34 @@ const ar: Messages = {
   reminder: {
     title: "وِردك اليومي",
     body: "دقائق مع القرآن: درس اليوم بانتظارك.",
+  },
+  offline: {
+    title: "الاستخدام دون اتصال",
+    description:
+      "نزّل دروسك القادمة لتواصل التعلّم دون اتصال بالإنترنت. لا يُنزَّل شيء حتى تضغط الزر.",
+    lessons: "عدد الدروس",
+    lessonsCount: (n: number, shown: string) =>
+      n > 10 ? `${shown} درسًا` : `${shown} دروس`,
+    audio: "مع تلاوة الآيات (صوت)",
+    audioDescription: "لسماع الآيات دون اتصال. يحتاج إلى مساحة أكبر بكثير.",
+    download: "تنزيل للاستخدام دون اتصال",
+    downloading: (done: string, total: string) =>
+      `جارٍ التنزيل… ${done} من ${total}`,
+    again: "نزّل مرة أخرى",
+    remove: "احذف بيانات عدم الاتصال",
+    removed: "حُذفت بيانات عدم الاتصال.",
+    saved: "جاهز للاستخدام دون اتصال.",
+    ready: (n: string, size: string) =>
+      `الدروس الجاهزة دون اتصال: ${n} (${size}).`,
+    withAudio: "مع التلاوة.",
+    textOnly: "نص فقط، دون تلاوة.",
+    mb: (n: string) => `${n} ميغابايت`,
+    unsupported: "هذا المتصفح لا يستطيع حفظ فقيه للاستخدام دون اتصال.",
+    failed: "لم يكتمل التنزيل. تحقّق من اتصالك وحاول مرة أخرى.",
+    banner: "أنت غير متصل. الدروس المنزّلة تعمل.",
+    bannerWaiting: (n: string) =>
+      `أنت غير متصل. ستُحفظ إجاباتك (${n}) عند عودة الاتصال.`,
+    synced: "حُفظت إجاباتك التي أجبتها دون اتصال.",
   },
   tour: {
     skip: "تخطَّ",
