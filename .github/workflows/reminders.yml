@@ -28,7 +28,7 @@ jobs:
           fi
           response="$(curl --silent --show-error --max-time 60 \
             --write-out "\n%{http_code}" \
-            -H "Authorization: ******" \
+            -H "Authorization: Bearer $CRON_SECRET" \
             "${APP_URL%/}/api/cron/reminders")"
           body="${response%$'\n'*}"
           status="${response##*$'\n'}"
