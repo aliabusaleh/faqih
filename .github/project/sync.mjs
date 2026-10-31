@@ -4,7 +4,9 @@
 //
 // Items are matched by title. A new item gets every field from items.json;
 // an existing item only gets the fields that are still empty, so cards moved
-// by hand on the board stay where they are.
+// by hand on the board stay where they are. The one exception is Status: it
+// moves forward when items.json is further along (e.g. Code review -> Done
+// after a merge), but never backward.
 
 import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
@@ -74,6 +76,9 @@ const DATE_FIELDS = { "Start date": "start", "Target date": "target" };
 const ITEM_KEYS = { Status: "status", Phase: "phase", Path: "path", Audience: "audience", Priority: "priority", Size: "size", "Work type": "type" };
 // The board's built-in Status options, used if they can't be replaced.
 const STATUS_FALLBACK = { Backlog: "Todo", Ready: "Todo", "In progress": "In Progress", "Code review": "In Progress", "Scholarly review": "In Progress", Done: "Done" };
+// How far along each status is; a card's status only ever moves up this list.
+const STATUS_RANK = { Backlog: 0, Todo: 1, Ready: 1, "In progress": 2, "In Progress": 2, "Code review": 3, "Scholarly review": 4, Done: 5 };
+const movesForward = (from, to) => from !== undefined && (STATUS_RANK[to] ?? -1) > (STATUS_RANK[from] ?? -1);
 
 const errors = [];
 
@@ -163,7 +168,8 @@ for (const name of Object.keys(DATE_FIELDS)) {
 project = loadProject();
 fields = fieldByName();
 
-// Existing items, by title, with the names of the fields that already have a value.
+// Existing items, by title, with the names of the fields that already have a
+// value and their current status.
 const existing = new Map();
 let cursor = null;
 do {
@@ -174,7 +180,7 @@ do {
         nodes { id
           content { ... on DraftIssue { title } ... on Issue { title } ... on PullRequest { title } }
           fieldValues(first: 30) { nodes {
-            ... on ProjectV2ItemFieldSingleSelectValue { field { ... on ProjectV2FieldCommon { name } } }
+            ... on ProjectV2ItemFieldSingleSelectValue { name field { ... on ProjectV2FieldCommon { name } } }
             ... on ProjectV2ItemFieldDateValue { field { ... on ProjectV2FieldCommon { name } } }
           } }
         }
@@ -185,7 +191,8 @@ do {
   for (const item of page.nodes) {
     if (!item.content?.title) continue;
     const filled = new Set(item.fieldValues.nodes.map((v) => v.field?.name).filter(Boolean));
-    existing.set(item.content.title, { id: item.id, filled });
+    const status = item.fieldValues.nodes.find((v) => v.field?.name === "Status")?.name;
+    existing.set(item.content.title, { id: item.id, filled, status });
   }
   cursor = page.pageInfo.hasNextPage ? page.pageInfo.endCursor : null;
 } while (cursor);
@@ -199,6 +206,7 @@ const setValue = (itemId, field, value) =>
   );
 
 let added = 0;
+let moved = 0;
 for (const entry of JSON.parse(read("items.json"))) {
   let item = existing.get(entry.title);
   if (!item) {
@@ -217,7 +225,9 @@ for (const entry of JSON.parse(read("items.json"))) {
 
   for (const [name, key] of Object.entries(ITEM_KEYS)) {
     const field = fields[name];
-    if (!field || item.filled.has(name) || !entry[key]) continue;
+    if (!field || !entry[key]) continue;
+    const advance = name === "Status" && movesForward(item.status, entry[key]);
+    if (item.filled.has(name) && !advance) continue;
     const wanted = name === "Status" && !field.options.some((o) => o.name === entry[key]) ? STATUS_FALLBACK[entry[key]] : entry[key];
     const option = field.options.find((o) => o.name === wanted);
     if (!option) {
@@ -225,6 +235,7 @@ for (const entry of JSON.parse(read("items.json"))) {
       continue;
     }
     attempt(`Set ${name} on "${entry.title}"`, () => setValue(item.id, field, { singleSelectOptionId: option.id }));
+    if (advance) moved++;
   }
   for (const [name, key] of Object.entries(DATE_FIELDS)) {
     const field = fields[name];
@@ -233,5 +244,5 @@ for (const entry of JSON.parse(read("items.json"))) {
   }
 }
 
-console.log(`::notice::Board synced: ${added} items added, ${errors.length} errors. https://github.com/users/${OWNER}/projects/${NUMBER}`);
+console.log(`::notice::Board synced: ${added} items added, ${moved} moved forward, ${errors.length} errors. https://github.com/users/${OWNER}/projects/${NUMBER}`);
 if (errors.length) process.exit(1);
