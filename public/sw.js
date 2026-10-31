@@ -6,7 +6,8 @@
 // Without that flag this worker never touches a request.
 
 const OFFLINE = new URL(self.location.href).searchParams.has("offline");
-const CACHE = "faqih-offline-v1";
+// The lessons and the Quran (Read mode) are downloaded apart (lib/offline).
+const CACHES = ["faqih-offline-v1", "faqih-quran-v1"];
 
 // A new version (or offline turned on or off) takes over at once.
 self.addEventListener("install", () => self.skipWaiting());
@@ -88,16 +89,20 @@ const withRange = async (request, response) => {
 // Pages: the network first, so they are up to date; the downloaded copy
 // when there's no connection. A downloaded page is refreshed as it is seen.
 const page = async (request) => {
-  const cache = await caches.open(CACHE);
   const key = new URL(request.url);
   key.search = "";
   try {
     const response = await fetch(request);
-    if (response.ok && !response.redirected && (await cache.match(key)))
-      await cache.put(key, response.clone());
+    if (response.ok && !response.redirected)
+      for (const name of CACHES) {
+        // caches.open would create a download the learner never asked for.
+        if (!(await caches.has(name))) continue;
+        const cache = await caches.open(name);
+        if (await cache.match(key)) await cache.put(key, response.clone());
+      }
     return response;
   } catch {
-    return (await cache.match(key)) || notDownloaded();
+    return (await caches.match(key)) || notDownloaded();
   }
 };
 
@@ -105,12 +110,13 @@ const page = async (request) => {
 // first. The app's own files are saved as they load, so the pages keep
 // working after an update; recitation only if it was downloaded.
 const saved = async (request, keep) => {
-  const cache = await caches.open(CACHE);
-  const hit = await cache.match(request.url);
+  const hit = await caches.match(request.url);
   if (hit) return withRange(request, hit);
   const response = await fetch(request);
   if (keep && response.status === 200)
-    await cache.put(request.url, response.clone());
+    for (const name of CACHES)
+      if (await caches.has(name))
+        await (await caches.open(name)).put(request.url, response.clone());
   return response;
 };
 

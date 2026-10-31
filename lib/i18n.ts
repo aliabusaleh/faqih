@@ -122,8 +122,8 @@ const en = {
   offline: {
     title: "Use offline",
     description:
-      "Download your next lessons to keep learning with no connection. Nothing is downloaded until you press the button.",
-    lessons: "Lessons to download",
+      "Download your next lessons, or the whole Quran to read, and use them with no connection. Nothing is downloaded until you press a button.",
+    lessons: "Your next lessons",
     lessonsCount: (_n: number, shown: string) => `${shown} lessons`,
     audio: "Include recitation audio",
     audioDescription: "So the ayat can be heard offline. Uses much more space.",
@@ -145,6 +145,13 @@ const en = {
     bannerWaiting: (n: string) =>
       `You're offline. ${n} answers will be saved when you're back online.`,
     synced: "Your offline answers are saved.",
+    quranTitle: "The whole Quran (Read)",
+    quranDescription:
+      "Every surah and juz' in Read, to read with no connection. Text only: listening still needs a connection.",
+    quranDownload: "Download the whole Quran",
+    quranReady: (size: string) =>
+      `The whole Quran is ready to read offline (${size}).`,
+    quranRemove: "Remove the Quran download",
   },
   tour: {
     skip: "Skip",
@@ -396,8 +403,8 @@ const ar: Messages = {
   offline: {
     title: "الاستخدام دون اتصال",
     description:
-      "نزّل دروسك القادمة لتواصل التعلّم دون اتصال بالإنترنت. لا يُنزَّل شيء حتى تضغط الزر.",
-    lessons: "عدد الدروس",
+      "نزّل دروسك القادمة، أو القرآن كاملًا للقراءة، واستخدمها دون اتصال بالإنترنت. لا يُنزَّل شيء حتى تضغط زرًّا.",
+    lessons: "دروسك القادمة",
     lessonsCount: (n: number, shown: string) =>
       n > 10 ? `${shown} درسًا` : `${shown} دروس`,
     audio: "مع تلاوة الآيات (صوت)",
@@ -420,6 +427,13 @@ const ar: Messages = {
     bannerWaiting: (n: string) =>
       `أنت غير متصل. ستُحفظ إجاباتك (${n}) عند عودة الاتصال.`,
     synced: "حُفظت إجاباتك التي أجبتها دون اتصال.",
+    quranTitle: "القرآن كاملًا (القراءة)",
+    quranDescription:
+      "كل السور والأجزاء في القراءة، لتقرأها دون اتصال. نص فقط: الاستماع يحتاج إلى اتصال.",
+    quranDownload: "تنزيل القرآن كاملًا",
+    quranReady: (size: string) =>
+      `القرآن كاملًا جاهز للقراءة دون اتصال (${size}).`,
+    quranRemove: "احذف تنزيل القرآن",
   },
   tour: {
     skip: "تخطَّ",
