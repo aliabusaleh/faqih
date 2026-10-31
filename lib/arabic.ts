@@ -1,10 +1,10 @@
 // Lenient matching for typed Arabic answers.
 //
-// Faqih shows Quran text in Tanzil's simple script, but the matching also
-// accepts the Uthmani script, which spells many words differently from
-// everyday (imla'i) Arabic: "ٱلْعَٰلَمِينَ" vs "العالمين", "ٱلصَّلَوٰةَ" vs
-// "الصلاة". A learner types the everyday spelling, without diacritics. So both
-// sides are reduced to a bare skeleton before comparing:
+// Faqih shows Quran text in its rasm (Tanzil's Uthmani script), which spells
+// many words differently from everyday (imla'i) Arabic: "ٱلْعَٰلَمِينَ" vs
+// "العالمين", "ٱلصَّلَوٰةَ" vs "الصلاة". A learner types the everyday spelling,
+// without diacritics. So both sides are reduced to a bare skeleton before
+// comparing:
 // - diacritics, Quranic marks and tatweel are removed
 // - waw or ya carrying a dagger alef (ٱلصَّلَوٰةَ) count as alef
 // - small waw and ya (إِبْرَٰهِـۧمَ) count as full letters
