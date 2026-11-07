@@ -8,11 +8,13 @@ import {
   useEffect,
   useMemo,
   useRef,
+  useState,
 } from "react";
 
 import { useLocale } from "@/components/locale-provider";
 import { useMode } from "@/components/mode-provider";
 import { type Locale } from "@/lib/i18n";
+import { REPEAT_COOKIE, setPreferenceCookie } from "@/lib/mode";
 import { recitationAudio } from "@/lib/recitation";
 
 // One sound at a time for the whole lesson: starting something new stops
@@ -36,6 +38,13 @@ export type Step = (
 type ReadAloud = {
   /** Read-aloud is on (Settings; on by default in kids mode). */
   enabled: boolean;
+  /**
+   * Kids mode: how many times an ayah is heard in a row, on Read first and
+   * in listening questions (components/repeat-picker). 1 otherwise.
+   */
+  repeat: number;
+  /** Changes `repeat`, remembered on this device. */
+  setRepeat: (times: number) => void;
   /** Play steps in order, stopping anything already playing. */
   play: (steps: Step[]) => void;
   stop: () => void;
@@ -45,6 +54,8 @@ type ReadAloud = {
 
 const ReadAloudContext = createContext<ReadAloud>({
   enabled: false,
+  repeat: 1,
+  setRepeat: () => undefined,
   play: () => undefined,
   stop: () => undefined,
   preload: () => undefined,
@@ -57,6 +68,14 @@ const VOICES_TIMEOUT_MS = 1000;
 // about a second.
 const LOAD_TIMEOUT_MS = 4000;
 const MAX_PRELOADED = 12;
+// Between two plays of the same ayah, so the child hears where it ends.
+const REPEAT_PAUSE_MS = 700;
+
+/** `step` played `times` times in a row, with a short pause in between. */
+export const repeated = (step: Step, times: number): Step[] =>
+  Array.from({ length: Math.max(1, times) }, (_, i) =>
+    i ? [{ kind: "wait", ms: REPEAT_PAUSE_MS } as Step, step] : [step]
+  ).flat();
 
 // A voice for the language, or null. Without a matching voice the browser
 // would read Arabic with an English voice, so then we say nothing.
@@ -81,10 +100,18 @@ const findVoice = async (lang: string) => {
 
 export const ReadAloudProvider = ({
   enabled,
+  repeat: initialRepeat,
   children,
-}: PropsWithChildren<{ enabled: boolean }>) => {
+}: PropsWithChildren<{ enabled: boolean; repeat: number }>) => {
   const locale = useLocale();
   const mode = useMode();
+  const [repeat, setRepeatState] = useState(initialRepeat);
+  // A new count from the server (e.g. after switching mode) wins.
+  useEffect(() => setRepeatState(initialRepeat), [initialRepeat]);
+  const setRepeat = useCallback((times: number) => {
+    setRepeatState(times);
+    setPreferenceCookie(REPEAT_COOKIE, String(times));
+  }, []);
   const audio = useRef<HTMLAudioElement | null>(null);
   // Bumped on every play/stop, so an older sequence stops at its next step.
   const run = useRef(0);
@@ -204,8 +231,8 @@ export const ReadAloudProvider = ({
   );
 
   const value = useMemo(
-    () => ({ enabled, play, stop, preload }),
-    [enabled, play, stop, preload]
+    () => ({ enabled, repeat, setRepeat, play, stop, preload }),
+    [enabled, repeat, setRepeat, play, stop, preload]
   );
 
   return (

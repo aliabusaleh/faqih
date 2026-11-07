@@ -263,6 +263,10 @@ const en = {
     },
     play: "Play",
     playSlow: "Play slowly",
+    // Kids mode: how many times each ayah is heard (components/repeat-picker).
+    repeat: "Repeat each ayah",
+    repeatTimes: (n: number, count: string) =>
+      n === 1 ? "Play each ayah once" : `Repeat each ayah ${count} times`,
     typeAnswer: "Type your answer",
     correctAnswer: "Correct answer:",
     tapToRemove: "Tap a word to remove it",
@@ -561,6 +565,15 @@ const ar: Messages = {
     },
     play: "استمع",
     playSlow: "استمع ببطء",
+    repeat: "كرّر كل آية",
+    repeatTimes: (n: number, count: string) =>
+      n === 1
+        ? "استمع لكل آية مرة واحدة"
+        : n === 2
+          ? "كرّر كل آية مرتين"
+          : n <= 10
+            ? `كرّر كل آية ${count} مرات`
+            : `كرّر كل آية ${count} مرة`,
     typeAnswer: "اكتب إجابتك",
     correctAnswer: "الإجابة الصحيحة:",
     tapToRemove: "اضغط على كلمة لإزالتها",

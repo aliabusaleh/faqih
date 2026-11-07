@@ -1,12 +1,19 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, useTransition } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useTransition,
+} from "react";
 
 import { BookOpen, Volume2 } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import Confetti from "react-confetti";
-import { useAudio, useWindowSize, useMount } from "react-use";
+import { useAudio, useLatest, useWindowSize, useMount } from "react-use";
 import { toast } from "sonner";
 
 import {
@@ -24,7 +31,12 @@ import { PreloadPage } from "@/components/preload-page";
 import { MeaningsProvider } from "@/components/meanings";
 import { QuranTextProvider } from "@/components/quran-text";
 import { useIsKids, useMode } from "@/components/mode-provider";
-import { type Step, isSpeakable, useReadAloud } from "@/components/read-aloud";
+import {
+  type Step,
+  isSpeakable,
+  repeated,
+  useReadAloud,
+} from "@/components/read-aloud";
 import { MAX_HEARTS } from "@/constants";
 import {
   challengeOptions,
@@ -127,7 +139,9 @@ export const Quiz = ({
   const locale = useLocale();
   const isKids = useIsKids();
   const mode = useMode();
-  const { enabled: readAloudOn, play, stop, preload } = useReadAloud();
+  const { enabled: readAloudOn, repeat, play, stop, preload } = useReadAloud();
+  // Read when the opening plays, so changing the count doesn't replay it.
+  const repeatLatest = useLatest(repeat);
 
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -252,9 +266,22 @@ export const Quiz = ({
     return steps;
   }, [challenge, instruction, listenRef]);
 
+  // Kids mode: the ayah of a listening question is heard `times` in a row
+  // (RepeatPicker); the instruction and other ayat once.
+  const opening = useCallback(
+    (times: number) =>
+      openingSteps.flatMap((step) =>
+        step.kind === "recite" && step.ref === listenRef
+          ? repeated(step, times)
+          : [step]
+      ),
+    [listenRef, openingSteps]
+  );
+
   useEffect(() => {
-    if (readAloudOn && !studying && openingSteps.length) play(openingSteps);
-  }, [openingSteps, play, readAloudOn, studying]);
+    if (readAloudOn && !studying && openingSteps.length)
+      play(opening(repeatLatest.current));
+  }, [opening, openingSteps, play, readAloudOn, repeatLatest, studying]);
 
   // Download the audio this question and the next will play, while the
   // learner reads: listening ayat always, and with read-aloud on, the ayat in
@@ -648,7 +675,7 @@ export const Quiz = ({
                 {openingSteps.length > 0 && (
                   <button
                     type="button"
-                    onClick={() => play(openingSteps)}
+                    onClick={() => play(opening(repeat))}
                     aria-label={t.lesson.listenAgain}
                     className="shrink-0 rounded-xl border-2 border-b-4 p-2 text-brand-500 hover:bg-black/5 active:border-b-2"
                   >

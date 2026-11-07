@@ -106,6 +106,10 @@ kids mode).
   before a public launch.**
 - The app's own words (instructions, "أحسنت!") use the browser's speech
   voice. With no voice for the language installed, they are skipped.
+- Kids mode can repeat each ayah 3, 5 or 7 times in a row
+  (`components/repeat-picker.tsx`), on Read first and in listening
+  questions. An ayah counts as heard after its first play, so repeats never
+  hold back the questions. Taps on words and options still play once.
 
 ## Rules
 

@@ -3,9 +3,11 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { BookOpen, Check, Play, Volume2 } from "lucide-react";
+import { useLatest } from "react-use";
 
 import { useLocale, useMessages } from "@/components/locale-provider";
-import { type Step, useReadAloud } from "@/components/read-aloud";
+import { type Step, repeated, useReadAloud } from "@/components/read-aloud";
+import { RepeatPicker } from "@/components/repeat-picker";
 import { Button } from "@/components/ui/button";
 import { type sourceTexts } from "@/db/schema";
 import { formatNumber } from "@/lib/i18n";
@@ -54,7 +56,10 @@ export const Study = ({
   const t = useMessages();
   const locale = useLocale();
   const ar = locale === "ar";
-  const { enabled, play, preload } = useReadAloud();
+  const { enabled, repeat, play, preload } = useReadAloud();
+  // Read when a sound starts, so changing the count (kids mode) doesn't
+  // restart what is already playing.
+  const repeatLatest = useLatest(repeat);
 
   // Read, then answer: the texts heard to the end so far, and the seconds
   // left to read them all (shown on the Start button as a countdown).
@@ -82,31 +87,35 @@ export const Study = ({
   const ready = secondsLeft === 0 || texts.every((text) => heard.has(text.key));
 
   // A text's sound, then a mark that it was heard to the end (a step that
-  // only runs if nothing stopped the one before it).
-  const listen = useCallback((text: SourceText): Step[] => {
+  // only runs if nothing stopped the one before it). An ayah is then heard
+  // again, `times` in all (kids mode); the first time is enough to start.
+  const listen = useCallback((text: SourceText, times: number): Step[] => {
     const step = stepFor(text);
-    return step
-      ? [
-          step,
-          {
-            kind: "wait",
-            ms: 0,
-            onStart: () => setHeard((prev) => new Set(prev).add(text.key)),
-          },
-        ]
-      : [];
+    if (!step) return [];
+    const [first, ...again] =
+      step.kind === "recite" ? repeated(step, times) : [step];
+    return [
+      first,
+      {
+        kind: "wait",
+        ms: 0,
+        onStart: () => setHeard((prev) => new Set(prev).add(text.key)),
+      },
+      ...again,
+    ];
   }, []);
 
-  const playAll = useMemo(
-    () =>
+  const playAll = useCallback(
+    (times: number) =>
       texts
-        .map(listen)
+        .map((text) => listen(text, times))
         .filter((steps) => steps.length > 0)
         .flatMap((steps, i) =>
           i ? [{ kind: "wait", ms: 400 } as Step, ...steps] : steps
         ),
     [listen, texts]
   );
+  const canPlay = texts.some((text) => stepFor(text) !== null);
 
   // Start downloading the recitations, so "Listen to all" starts quickly.
   useEffect(() => {
@@ -117,8 +126,8 @@ export const Study = ({
 
   // With read-aloud on (kids by default), recite them all straight away.
   useEffect(() => {
-    if (enabled && playAll.length) play(playAll);
-  }, [enabled, play, playAll]);
+    if (enabled && canPlay) play(playAll(repeatLatest.current));
+  }, [canPlay, enabled, play, playAll, repeatLatest]);
 
   return (
     <div className="flex w-full flex-col gap-y-6 px-6 lg:w-[600px] lg:px-0">
@@ -132,10 +141,10 @@ export const Study = ({
             </span>
           )}
         </h1>
-        {playAll.length > 0 && (
+        {canPlay && (
           <Button
             variant="secondaryOutline"
-            onClick={() => play(playAll)}
+            onClick={() => play(playAll(repeat))}
             className="shrink-0"
           >
             <Play className="me-2 h-4 w-4" />
@@ -144,6 +153,7 @@ export const Study = ({
         )}
       </div>
       <p className="text-neutral-500">{t.study.intro}</p>
+      {canPlay && <RepeatPicker className="justify-start" />}
 
       <ol className="flex flex-col gap-y-3">
         {texts.map((text) => {
@@ -210,7 +220,7 @@ export const Study = ({
               {step && (
                 <button
                   type="button"
-                  onClick={() => play(listen(text))}
+                  onClick={() => play(listen(text, repeat))}
                   aria-label={t.lesson.play}
                   className={cn(
                     "shrink-0 rounded-xl border-2 border-b-4 p-2 text-brand-500 hover:bg-black/5 active:border-b-2",

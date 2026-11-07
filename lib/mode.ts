@@ -34,6 +34,19 @@ export const TIME_ZONE_COOKIE = "tz";
 export const readAloudOn = (cookie: string | undefined, mode: Mode) =>
   cookie === undefined ? mode === "kids" : cookie === "1";
 
+// Kids mode: how many times an ayah is heard in a row, on Read first and in
+// listening questions, for children who learn by ear (components/read-aloud).
+export const REPEAT_COOKIE = "repeat";
+export const REPEAT_TIMES = [1, 3, 5, 7] as const;
+
+/** The repeat count chosen on this device; always 1 outside kids mode. */
+export const repeatTimes = (cookie: string | undefined, mode: Mode) => {
+  const times = Number(cookie);
+  return mode === "kids" && (REPEAT_TIMES as readonly number[]).includes(times)
+    ? times
+    : 1;
+};
+
 const YEAR_IN_SECONDS = 31_536_000;
 
 export const isMode = (value: unknown): value is Mode =>

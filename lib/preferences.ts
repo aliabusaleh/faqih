@@ -9,10 +9,12 @@ import {
   LAST_UNIT_COOKIE,
   MODE_COOKIE,
   READ_ALOUD_COOKIE,
+  REPEAT_COOKIE,
   TIME_ZONE_COOKIE,
   TOUR_COOKIE,
   isMode,
   readAloudOn,
+  repeatTimes,
 } from "@/lib/mode";
 
 // Server-side: this device's kids/full mode, else the default.
@@ -26,6 +28,10 @@ export const isTourDone = async () =>
 
 export const isReadAloudOn = async () =>
   readAloudOn((await cookies()).get(READ_ALOUD_COOKIE)?.value, await getMode());
+
+/** Kids mode: how many times an ayah is heard in a row (1 otherwise). */
+export const getRepeat = async () =>
+  repeatTimes((await cookies()).get(REPEAT_COOKIE)?.value, await getMode());
 
 /** The unit of the last lesson opened on this device, if any. */
 export const getLastUnitId = async () => {

@@ -21,7 +21,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { APP_NAME, features, siteConfig } from "@/config";
 import { dir, messages } from "@/lib/i18n";
 import { getLocale } from "@/lib/locale";
-import { getMode, isReadAloudOn } from "@/lib/preferences";
+import { getMode, getRepeat, isReadAloudOn } from "@/lib/preferences";
 import { AUDIO_ORIGINS } from "@/lib/recitation";
 import { cn } from "@/lib/utils";
 
@@ -68,10 +68,11 @@ export default async function RootLayout({
   // then plays without waiting for DNS and TLS.
   for (const origin of AUDIO_ORIGINS) preconnect(origin);
 
-  const [locale, mode, readAloud] = await Promise.all([
+  const [locale, mode, readAloud, repeat] = await Promise.all([
     getLocale(),
     getMode(),
     isReadAloudOn(),
+    getRepeat(),
   ]);
 
   const app = (
@@ -88,7 +89,7 @@ export default async function RootLayout({
       >
         <LocaleProvider locale={locale}>
           <ModeProvider mode={mode}>
-            <ReadAloudProvider enabled={readAloud}>
+            <ReadAloudProvider enabled={readAloud} repeat={repeat}>
               <Toaster theme="light" richColors closeButton />
               <OfflineBanner />
               <TimeZoneCookie />

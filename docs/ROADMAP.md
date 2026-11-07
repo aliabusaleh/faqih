@@ -125,10 +125,12 @@ part-time).** Full Quran adds ≈ 3–4 weeks, and Tajweed adds ≈ 3–4 weeks.
   word; "أحسنت!" / "حاول مرة أخرى" after each answer. Quran is only ever
   recited by a qari (al-Husary _muallim_ for kids, Alafasy otherwise), never
   synthesised. Questions are announced to screen readers (`aria-live`).
+- **Repeat** (kids mode): a 1× / 3× / 5× / 7× choice on Read first and in
+  listening questions plays each ayah that many times in a row, for children
+  who learn by ear. Kept on the device.
 
 **Left:**
 
-- Repeat-N-times audio for kids who can't read yet.
 - Rewards and stickers for kids.
 - Audio for MATCH items and ayah fragments.
 
