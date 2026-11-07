@@ -131,8 +131,8 @@
   },
   {
     "title": "Rewards and stickers for kids",
-    "body": "Gentle rewards after lessons (stickers, stars), suitable for the honour of the Quran: no gambling-style mechanics.\n\n**Done when:** kids earn a sticker per cleared lesson and can see their collection.",
-    "status": "Ready",
+    "body": "Gentle rewards after lessons (stickers, stars), suitable for the honour of the Quran: no gambling-style mechanics.\n\n**Done when:** kids earn a sticker per cleared lesson and can see their collection.\n\nIn review in #47: a sticker for each lesson finished (a medal for a surah exam), and a Stickers tab with the album.\n\nPull request: https://github.com/aliabusaleh/faqih/pull/47",
+    "status": "Code review",
     "phase": "M2",
     "path": "Kids",
     "audience": "Kids",

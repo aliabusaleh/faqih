@@ -10,6 +10,7 @@ import { courseInMode } from "@/lib/mode";
 import { getLastUnitId, getMode, getToday } from "@/lib/preferences";
 import { computeProgress, firstOpenLesson } from "@/lib/progress";
 import { REVIEW_SIZE as DAILY_REVIEW_SIZE } from "@/lib/review";
+import { lessonSticker, stickerAlbum } from "@/lib/stickers";
 
 import db from "./drizzle";
 import {
@@ -78,18 +79,15 @@ export const getUserProgress = cache(async () => {
   return data;
 });
 
-export const getUnits = cache(async () => {
-  const { userId } = await getAuth();
-  const userProgress = await getUserProgress();
-
-  if (!userId || !userProgress?.activeCourseId) return [];
-
-  // The full Quran course has thousands of lessons and tens of thousands of
-  // challenges: the database counts each lesson's challenges and how many
-  // the learner has done, rather than sending every challenge here.
+// A course's units and visible lessons, each lesson with whether the
+// learner has completed it. The full Quran course has thousands of lessons
+// and tens of thousands of challenges: the database counts each lesson's
+// challenges and how many the learner has done, rather than sending every
+// challenge here.
+const unitsWithCompletion = async (courseId: number, userId: string) => {
   const [data, counts] = await Promise.all([
     db.query.units.findMany({
-      where: eq(units.courseId, userProgress.activeCourseId),
+      where: eq(units.courseId, courseId),
       orderBy: (units, { asc }) => [asc(units.order)],
       with: {
         lessons: {
@@ -116,12 +114,12 @@ export const getUnits = cache(async () => {
           eq(challengeProgress.userId, userId)
         )
       )
-      .where(eq(units.courseId, userProgress.activeCourseId))
+      .where(eq(units.courseId, courseId))
       .groupBy(challenges.lessonId),
   ]);
   const countOf = new Map(counts.map((c) => [c.lessonId, c]));
 
-  const withCompletion = data.map((unit) => ({
+  return data.map((unit) => ({
     ...unit,
     lessons: unit.lessons.map((lesson) => {
       const { total = 0, done = 0 } = countOf.get(lesson.id) ?? {};
@@ -133,8 +131,42 @@ export const getUnits = cache(async () => {
       };
     }),
   }));
+};
 
-  return computeProgress(withCompletion);
+export const getUnits = cache(async () => {
+  const { userId } = await getAuth();
+  const userProgress = await getUserProgress();
+
+  if (!userId || !userProgress?.activeCourseId) return [];
+
+  return computeProgress(
+    await unitsWithCompletion(userProgress.activeCourseId, userId)
+  );
+});
+
+/**
+ * Kids mode: the sticker album (lib/stickers) of each kids course in the
+ * visitor's language. Null outside kids mode.
+ */
+export const getStickerAlbum = cache(async () => {
+  const { userId } = await getAuth();
+  if (!userId || (await getMode()) !== "kids") return null;
+
+  const kidsCourses = (await getCourses()).filter((c) => c.track === "kids");
+  return Promise.all(
+    kidsCourses.map(async (course) => ({
+      courseId: course.id,
+      title: course.title,
+      ...stickerAlbum(await unitsWithCompletion(course.id, userId)),
+    }))
+  );
+});
+
+/** The sticker a lesson of the active kids course earns, else null. */
+export const getLessonSticker = cache(async (lessonId: number) => {
+  const progress = await getUserProgress();
+  if (progress?.activeCourse?.track !== "kids") return null;
+  return lessonSticker(await getUnits(), lessonId);
 });
 
 export const getCourseById = cache(async (courseId: number) => {

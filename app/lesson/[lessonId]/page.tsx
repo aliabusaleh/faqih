@@ -1,6 +1,11 @@
 import { redirect } from "next/navigation";
 
-import { getLesson, getUserProgress, getUserSubscription } from "@/db/queries";
+import {
+  getLesson,
+  getLessonSticker,
+  getUserProgress,
+  getUserSubscription,
+} from "@/db/queries";
 
 import { Quiz } from "../quiz";
 
@@ -26,6 +31,8 @@ const LessonIdPage = async ({ params, searchParams }: LessonIdPageProps) => {
   ]);
 
   if (!lesson || !userProgress) return redirect("/learn");
+  // Kids: the sticker for finishing it, as it stands before this time.
+  const sticker = await getLessonSticker(lesson.id);
 
   const initialPercentage =
     (lesson.challenges.filter((challenge) => challenge.completed).length /
@@ -38,6 +45,7 @@ const LessonIdPage = async ({ params, searchParams }: LessonIdPageProps) => {
       unitId={lesson.unitId}
       reviewStatus={lesson.reviewStatus}
       isExam={lesson.kind === "exam"}
+      sticker={sticker}
       studyTexts={lesson.studyTexts}
       studyParts={lesson.studyParts}
       meanings={lesson.meanings}

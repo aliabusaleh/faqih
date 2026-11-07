@@ -23,9 +23,10 @@ export const useNavItems = () => {
     { href: "/courses", label: t.nav.courses, iconSrc: "/courses.svg" },
     { href: "/read", label: t.nav.read, iconSrc: "/read.svg" },
     { href: "/modes", label: t.nav.modes, iconSrc: "/modes.svg" },
-    // Kids mode keeps the menu short: no points, hearts or rankings.
+    // Kids mode keeps the menu short: no points, hearts or rankings, but
+    // their sticker album.
     ...(isKids
-      ? []
+      ? [{ href: "/stickers", label: t.nav.stickers, iconSrc: "/stickers.svg" }]
       : [
           {
             href: "/leaderboard",
