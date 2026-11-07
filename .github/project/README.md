@@ -85,9 +85,9 @@ Also planned: Hadith (beyond an-Nawawi 1 to 10), Sirah, Quranic Arabic vocabular
 | **M1** Content pipeline | Tracks, sources and review status in the schema; full Quran imported as source texts; an-Nawawi and Hisn al-Muslim drafts | ✅ Done |
 | **M1.5** Arabic-first UI | RTL, Arabic-Indic digits, Arabic and English switch, Arabic sign-in screens | ✅ Mostly done |
 | **M2** Exercises and audio | Six exercise types, lenient Arabic matching, exams and free order, kids and full mode, welcome tour, read aloud, read the ayat first, learning modes, reliable recitation | ✅ Mostly done |
-| **M3** Kids path | Short surahs, daily reminders ✅, spaced review and daily streak (in review, #37), stories with quizzes, parent-managed profiles, scholarly review | 🚧 Started |
+| **M3** Kids path | Short surahs, daily reminders ✅, spaced review and daily streak ✅, stories with quizzes, parent-managed profiles, scholarly review | 🚧 Started |
 | **M4** Beta launch | Hosting ✅, automatic schema and lesson updates ✅, faster lessons ✅; installable app with offline lessons, accessibility, beta with 50 to 100 families | 🚧 Started |
-| **M5** Full Quran | Whole Quran course ✅, juz' exams ✅, read mode ✅, meaning under each ayah ✅; difficulty levels, Arabic keyboard, surah recitation, hifz review queue | 🚧 Started |
+| **M5** Full Quran | Whole Quran course ✅, juz' exams ✅, read mode ✅, meaning under each ayah ✅, hifz review queue ✅; difficulty levels, Arabic keyboard, surah recitation | 🚧 Started |
 | **M6** Tajweed | Colour-coded text, rule explanations with audio, exercises, review by tajweed teachers | ⏳ Planned |
 | **M7** Maher mode | Quran and Islamic knowledge challenges, levels and badges | 💡 Future |
 

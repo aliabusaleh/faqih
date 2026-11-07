@@ -196,8 +196,8 @@
   },
   {
     "title": "Spaced-repetition review queue",
-    "body": "Bring back ayat a learner is forgetting, at growing intervals.\n\n**Done when:** a daily review lesson is built from the learner's weak ayat.\n\nIn review in #37 (daily review with spaced repetition per ayah, and a daily streak).\n\nPull request: https://github.com/aliabusaleh/faqih/pull/37",
-    "status": "Code review",
+    "body": "Bring back ayat a learner is forgetting, at growing intervals.\n\n**Done when:** a daily review lesson is built from the learner's weak ayat.\n\nMerged in #37: a daily review with spaced repetition per ayah, and a daily streak.\n\nPull request: https://github.com/aliabusaleh/faqih/pull/37",
+    "status": "Done",
     "phase": "M3",
     "path": "Kids",
     "audience": "All learners",
@@ -209,8 +209,8 @@
   },
   {
     "title": "Daily goal and streak",
-    "body": "A small daily goal (e.g. one lesson) and a gentle streak. No guilt messages.\n\n**Done when:** the learn page shows today's goal and the current streak.\n\nIn review in #37 (daily review with spaced repetition per ayah, and a daily streak).\n\nPull request: https://github.com/aliabusaleh/faqih/pull/37",
-    "status": "Code review",
+    "body": "A small daily goal (e.g. one lesson) and a gentle streak. No guilt messages.\n\n**Done when:** the learn page shows today's goal and the current streak.\n\nMerged in #37: a daily review with spaced repetition per ayah, and a daily streak.\n\nPull request: https://github.com/aliabusaleh/faqih/pull/37",
+    "status": "Done",
     "phase": "M3",
     "path": "Kids",
     "audience": "All learners",
@@ -547,8 +547,8 @@
   },
   {
     "title": "Hifz review queue across the whole Quran",
-    "body": "A revision plan for everything a learner has memorised.",
-    "status": "Backlog",
+    "body": "A revision plan for everything a learner has memorised.\n\nMerged in #37: the daily review brings back every ayah learned, in any course, on its own schedule (content/README.md).\n\nPull request: https://github.com/aliabusaleh/faqih/pull/37",
+    "status": "Done",
     "phase": "M5",
     "path": "Full Quran",
     "audience": "Adults",
@@ -833,7 +833,7 @@
   },
   {
     "title": "Show the Quran in Tanzil's simple script",
-    "body": "Lessons show the Quran in Tanzil's simple script, easier to read on small screens.\n\nPull request: https://github.com/aliabusaleh/faqih/pull/24",
+    "body": "Lessons show the Quran in Tanzil's simple script, easier to read on small screens.\n\nReplaced in #42 by the Quran's rasm (Uthmani).\n\nPull request: https://github.com/aliabusaleh/faqih/pull/24",
     "status": "Done",
     "phase": "M2",
     "path": "Full Quran",
@@ -920,6 +920,19 @@
     "size": "M",
     "type": "Feature",
     "start": "2026-10-28",
+    "target": "2026-10-31"
+  },
+  {
+    "title": "Show the Quran in its rasm (Uthmani), in Amiri Quran",
+    "body": "Lessons, exams, reviews and read mode show the Quran as written in the mushaf (Tanzil Uthmani), in the Amiri Quran font. Typed answers still accept the everyday spelling, and every word chip can recite its word.\n\nPull request: https://github.com/aliabusaleh/faqih/pull/42",
+    "status": "Done",
+    "phase": "M2",
+    "path": "Full Quran",
+    "audience": "All learners",
+    "priority": "P1",
+    "size": "M",
+    "type": "Feature",
+    "start": "2026-10-31",
     "target": "2026-10-31"
   }
 ]
