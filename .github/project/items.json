@@ -118,8 +118,8 @@
   },
   {
     "title": "Repeat-N-times audio for kids who cannot read yet",
-    "body": "Let a child hear an ayah 3, 5 or 7 times in a row before answering.\n\n**Done when:** kids mode offers a repeat count, and the count is remembered on the device.\n\nIn review in #46: a 1×, 3×, 5× or 7× choice on Read first and in listening questions, kept on the device.\n\nPull request: https://github.com/aliabusaleh/faqih/pull/46",
-    "status": "Code review",
+    "body": "Let a child hear an ayah 3, 5 or 7 times in a row before answering.\n\n**Done when:** kids mode offers a repeat count, and the count is remembered on the device.\n\nMerged in #46: a 1×, 3×, 5× or 7× choice on Read first and in listening questions, kept on the device.\n\nPull request: https://github.com/aliabusaleh/faqih/pull/46",
+    "status": "Done",
     "phase": "M2",
     "path": "Kids",
     "audience": "Kids",
@@ -131,8 +131,8 @@
   },
   {
     "title": "Rewards and stickers for kids",
-    "body": "Gentle rewards after lessons (stickers, stars), suitable for the honour of the Quran: no gambling-style mechanics.\n\n**Done when:** kids earn a sticker per cleared lesson and can see their collection.\n\nIn review in #47: a sticker for each lesson finished (a medal for a surah exam), and a Stickers tab with the album.\n\nPull request: https://github.com/aliabusaleh/faqih/pull/47",
-    "status": "Code review",
+    "body": "Gentle rewards after lessons (stickers, stars), suitable for the honour of the Quran: no gambling-style mechanics.\n\n**Done when:** kids earn a sticker per cleared lesson and can see their collection.\n\nMerged in #47: a sticker for each lesson finished (a medal for a surah exam), and a Stickers tab with the album.\n\nPull request: https://github.com/aliabusaleh/faqih/pull/47",
+    "status": "Done",
     "phase": "M2",
     "path": "Kids",
     "audience": "Kids",
