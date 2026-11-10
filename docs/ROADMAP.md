@@ -131,7 +131,6 @@ part-time).** Full Quran adds ≈ 3–4 weeks, and Tajweed adds ≈ 3–4 weeks.
 
 **Left:**
 
-- Repeat-N-times audio for kids who can't read yet.
 - Audio for MATCH items and ayah fragments.
 
 ### M3 — Kids track (3–4 weeks, runs alongside M2; content is the bottleneck)
