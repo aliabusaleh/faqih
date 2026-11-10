@@ -231,7 +231,9 @@ for (const entry of JSON.parse(read("items.json"))) {
     const wanted = name === "Status" && !field.options.some((o) => o.name === entry[key]) ? STATUS_FALLBACK[entry[key]] : entry[key];
     const option = field.options.find((o) => o.name === wanted);
     if (!option) {
-      errors.push(`No option "${wanted}" in field ${name}`);
+      const message = `No option "${wanted}" in field ${name}, for "${entry.title}"`;
+      errors.push(message);
+      console.log(`::error::${message}`);
       continue;
     }
     attempt(`Set ${name} on "${entry.title}"`, () => setValue(item.id, field, { singleSelectOptionId: option.id }));
